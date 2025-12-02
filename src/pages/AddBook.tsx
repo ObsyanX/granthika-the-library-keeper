@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, BookOpen, Film } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -7,10 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { genres } from '@/lib/mockData';
+import { genres, mockBooks } from '@/lib/mockData';
 
 export default function AddBook() {
   const navigate = useNavigate();
+  const { serialNo: editSerialNo } = useParams();
+  const isEditMode = Boolean(editSerialNo);
+
   const [type, setType] = useState<'book' | 'movie'>('book');
   const [formData, setFormData] = useState({
     title: '',
@@ -20,6 +23,23 @@ export default function AddBook() {
     copies: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Auto-populate form when editing
+  useEffect(() => {
+    if (isEditMode && editSerialNo) {
+      const book = mockBooks.find(b => b.serialNo === editSerialNo);
+      if (book) {
+        setType(book.type);
+        setFormData({
+          title: book.title,
+          author: book.author,
+          genre: book.genre,
+          serialNo: book.serialNo,
+          copies: book.copies.toString(),
+        });
+      }
+    }
+  }, [isEditMode, editSerialNo]);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -36,9 +56,15 @@ export default function AddBook() {
     e.preventDefault();
     if (!validate()) return;
 
-    toast.success(`${type === 'book' ? 'Book' : 'Movie'} added successfully!`, {
-      description: `"${formData.title}" has been added to the catalog`,
-    });
+    if (isEditMode) {
+      toast.success(`${type === 'book' ? 'Book' : 'Movie'} updated successfully!`, {
+        description: `"${formData.title}" has been updated`,
+      });
+    } else {
+      toast.success(`${type === 'book' ? 'Book' : 'Movie'} added successfully!`, {
+        description: `"${formData.title}" has been added to the catalog`,
+      });
+    }
     navigate('/books');
   };
 
@@ -51,7 +77,9 @@ export default function AddBook() {
         </Button>
 
         <div className="neu-card bg-card rounded-2xl p-8">
-          <h1 className="font-display text-2xl font-bold text-foreground mb-6">Add New Item</h1>
+          <h1 className="font-display text-2xl font-bold text-foreground mb-6">
+            {isEditMode ? 'Update Item' : 'Add New Item'}
+          </h1>
 
           {/* Type Toggle */}
           <div className="flex rounded-xl p-1 bg-muted mb-8">
@@ -154,7 +182,7 @@ export default function AddBook() {
                 Cancel
               </Button>
               <Button type="submit" className="flex-1 h-12 rounded-xl gradient-primary text-primary-foreground">
-                Add {type === 'book' ? 'Book' : 'Movie'}
+                {isEditMode ? 'Update' : 'Add'} {type === 'book' ? 'Book' : 'Movie'}
               </Button>
             </div>
           </form>

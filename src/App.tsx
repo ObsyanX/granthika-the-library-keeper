@@ -15,6 +15,8 @@ import ReturnBook from "./pages/ReturnBook";
 import PayFine from "./pages/PayFine";
 import Membership from "./pages/Membership";
 import AddMembership from "./pages/AddMembership";
+import UpdateMembership from "./pages/UpdateMembership";
+import BookAvailable from "./pages/BookAvailable";
 import Reports from "./pages/Reports";
 import UserManagement from "./pages/UserManagement";
 import NotFound from "./pages/NotFound";
@@ -36,11 +38,13 @@ const App = () => (
               <Route path="/books/add" element={<AddBook />} />
               <Route path="/books/edit/:serialNo" element={<AddBook />} />
               <Route path="/transactions" element={<Transactions />} />
+              <Route path="/transactions/search" element={<BookAvailable />} />
               <Route path="/transactions/issue" element={<IssueBook />} />
               <Route path="/transactions/return" element={<ReturnBook />} />
               <Route path="/transactions/fine" element={<PayFine />} />
               <Route path="/membership" element={<Membership />} />
               <Route path="/membership/add" element={<AddMembership />} />
+              <Route path="/membership/update" element={<UpdateMembership />} />
               <Route path="/membership/edit/:membershipNo" element={<AddMembership />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/users" element={<UserManagement />} />
