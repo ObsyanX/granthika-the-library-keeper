@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { BookOpen, Users, AlertTriangle, CheckCircle, Download, Printer } from 'lucide-react';
+import { BookOpen, Users, AlertTriangle, CheckCircle, Download, Printer, Clock } from 'lucide-react';
+import { format } from 'date-fns';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { mockBooks, mockMembers, mockTransactions } from '@/lib/mockData';
 
-type ReportType = 'available' | 'issued' | 'members' | 'overdue';
+type ReportType = 'available' | 'issued' | 'members' | 'overdue' | 'duetoday';
 
 export default function Reports() {
   const [activeReport, setActiveReport] = useState<ReportType>('available');
@@ -15,11 +16,14 @@ export default function Reports() {
     { id: 'issued' as const, label: 'Issued Books', icon: CheckCircle },
     { id: 'members' as const, label: 'Members', icon: Users },
     { id: 'overdue' as const, label: 'Overdue Books', icon: AlertTriangle },
+    { id: 'duetoday' as const, label: 'Due Today', icon: Clock },
   ];
 
+  const today = format(new Date(), 'yyyy-MM-dd');
   const availableBooks = mockBooks.filter(b => b.availableCopies > 0);
   const issuedTransactions = mockTransactions.filter(t => t.status === 'issued');
   const overdueTransactions = mockTransactions.filter(t => t.status === 'overdue');
+  const dueTodayTransactions = mockTransactions.filter(t => t.dueDate === today && t.status !== 'returned');
 
   const handleExport = () => {
     toast.success('Report exported!', { description: 'CSV file has been downloaded' });
@@ -195,7 +199,47 @@ export default function Reports() {
                     <tr>
                       <td colSpan={4} className="py-12 text-center text-muted-foreground">
                         <CheckCircle className="w-12 h-12 mx-auto text-accent-foreground mb-3" />
-                        No overdue books! Great job! 🎉
+                        No overdue books! Great job!
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Due Today */}
+          {activeReport === 'duetoday' && (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Book</th>
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Member</th>
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Issue Date</th>
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Due Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dueTodayTransactions.length > 0 ? dueTodayTransactions.map((t) => (
+                    <tr key={t.id} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
+                      <td className="py-4 px-6">
+                        <p className="font-medium text-foreground">{t.bookTitle}</p>
+                        <p className="text-sm text-muted-foreground">{t.serialNo}</p>
+                      </td>
+                      <td className="py-4 px-6 text-foreground">{t.memberName}</td>
+                      <td className="py-4 px-6 text-muted-foreground">{t.issueDate}</td>
+                      <td className="py-4 px-6">
+                        <span className="bg-secondary/10 text-secondary-foreground px-2 py-1 rounded text-sm font-medium">
+                          {t.dueDate}
+                        </span>
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan={4} className="py-12 text-center text-muted-foreground">
+                        <Clock className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
+                        No books due today
                       </td>
                     </tr>
                   )}

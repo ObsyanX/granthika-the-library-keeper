@@ -9,7 +9,9 @@ import {
   ChevronLeft,
   ChevronRight,
   UserPlus,
-  PlusCircle
+  PlusCircle,
+  Search,
+  Edit
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -99,6 +101,7 @@ export function Sidebar() {
         {/* Transactions */}
         <NavGroup title="Transactions" collapsed={collapsed}>
           <NavItem to="/transactions" icon={RefreshCw} label="Overview" collapsed={collapsed} />
+          <NavItem to="/transactions/search" icon={Search} label="Book Available" collapsed={collapsed} />
           <NavItem to="/transactions/issue" icon={BookOpen} label="Issue Book" collapsed={collapsed} />
           <NavItem to="/transactions/return" icon={RefreshCw} label="Return Book" collapsed={collapsed} />
           {isAdmin && (
@@ -111,6 +114,7 @@ export function Sidebar() {
           <NavGroup title="Membership" collapsed={collapsed}>
             <NavItem to="/membership" icon={Users} label="All Members" collapsed={collapsed} />
             <NavItem to="/membership/add" icon={UserPlus} label="Add Member" collapsed={collapsed} />
+            <NavItem to="/membership/update" icon={Edit} label="Update Member" collapsed={collapsed} />
           </NavGroup>
         )}
 

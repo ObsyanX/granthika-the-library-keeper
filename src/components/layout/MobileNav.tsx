@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Home, BookOpen, RefreshCw, FileText, Users, Menu, X } from 'lucide-react';
+import { Home, BookOpen, RefreshCw, FileText, Users, Menu, X, Search, Edit } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
@@ -69,11 +69,13 @@ export function MobileNav() {
                 { to: '/books', icon: BookOpen, label: 'Books Catalog' },
                 { to: '/books/add', icon: BookOpen, label: 'Add Book', adminOnly: true },
                 { to: '/transactions', icon: RefreshCw, label: 'Transactions' },
+                { to: '/transactions/search', icon: Search, label: 'Book Available' },
                 { to: '/transactions/issue', icon: BookOpen, label: 'Issue Book' },
                 { to: '/transactions/return', icon: RefreshCw, label: 'Return Book' },
                 { to: '/transactions/fine', icon: RefreshCw, label: 'Pay Fine', adminOnly: true },
                 { to: '/membership', icon: Users, label: 'Memberships', adminOnly: true },
                 { to: '/membership/add', icon: Users, label: 'Add Member', adminOnly: true },
+                { to: '/membership/update', icon: Edit, label: 'Update Member', adminOnly: true },
                 { to: '/users', icon: Users, label: 'User Management', adminOnly: true },
                 { to: '/reports', icon: FileText, label: 'Reports' },
               ]
