@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, BookOpen } from 'lucide-react';
+import { ArrowLeft, Search, BookOpen, Loader2 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { mockBooks } from '@/lib/mockData';
+import { useBooks } from '@/hooks/useBooks';
 
 export default function BookAvailable() {
   const navigate = useNavigate();
+  const { books, loading, availableBooks } = useBooks();
   const [bookName, setBookName] = useState('');
   const [authorName, setAuthorName] = useState('');
   const [selectedBook, setSelectedBook] = useState<string | null>(null);
@@ -17,7 +18,7 @@ export default function BookAvailable() {
   const [hasSearched, setHasSearched] = useState(false);
 
   // Get unique authors for dropdown
-  const uniqueAuthors = [...new Set(mockBooks.map(b => b.author))];
+  const uniqueAuthors = [...new Set(books.map(b => b.author))];
 
   const handleSearch = () => {
     // Validation: At least one field must be filled
@@ -33,10 +34,10 @@ export default function BookAvailable() {
 
   // Filter available books based on search criteria
   const searchResults = hasSearched
-    ? mockBooks.filter(book => {
+    ? availableBooks.filter(book => {
         const matchesTitle = !bookName.trim() || book.title.toLowerCase().includes(bookName.toLowerCase());
         const matchesAuthor = !authorName || book.author === authorName;
-        return book.availableCopies > 0 && matchesTitle && matchesAuthor;
+        return matchesTitle && matchesAuthor;
       })
     : [];
 
@@ -48,6 +49,16 @@ export default function BookAvailable() {
     // Navigate to issue page with selected book
     navigate('/transactions/issue', { state: { bookId: selectedBook } });
   };
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -142,7 +153,7 @@ export default function BookAvailable() {
                               selectedBook === book.id ? 'bg-primary/10' : ''
                             }`}
                           >
-                            <td className="py-3 px-4 font-mono text-foreground">{book.serialNo}</td>
+                            <td className="py-3 px-4 font-mono text-foreground">{book.serial_no}</td>
                             <td className="py-3 px-4">
                               <div className="flex items-center gap-2">
                                 <BookOpen className="w-4 h-4 text-primary" />
@@ -153,7 +164,7 @@ export default function BookAvailable() {
                             <td className="py-3 px-4 text-muted-foreground">{book.genre}</td>
                             <td className="py-3 px-4">
                               <span className="bg-accent text-accent-foreground px-2 py-1 rounded text-sm">
-                                {book.availableCopies} / {book.copies}
+                                {book.available_copies} / {book.copies}
                               </span>
                             </td>
                             <td className="py-3 px-4 text-center">

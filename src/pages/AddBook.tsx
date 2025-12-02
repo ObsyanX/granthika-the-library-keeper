@@ -1,18 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, BookOpen, Film } from 'lucide-react';
+import { ArrowLeft, BookOpen, Film, Loader2 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { genres, mockBooks } from '@/lib/mockData';
+import { genres } from '@/lib/mockData';
+import { useBooks } from '@/hooks/useBooks';
 
 export default function AddBook() {
   const navigate = useNavigate();
   const { serialNo: editSerialNo } = useParams();
   const isEditMode = Boolean(editSerialNo);
+  const { addBook, updateBook, getBookBySerialNo, books } = useBooks();
 
   const [type, setType] = useState<'book' | 'movie'>('book');
   const [formData, setFormData] = useState({
@@ -23,21 +25,27 @@ export default function AddBook() {
     copies: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  const [editBookId, setEditBookId] = useState<string | null>(null);
 
   // Auto-populate form when editing
   useEffect(() => {
     if (isEditMode && editSerialNo) {
-      const book = mockBooks.find(b => b.serialNo === editSerialNo);
-      if (book) {
-        setType(book.type);
-        setFormData({
-          title: book.title,
-          author: book.author,
-          genre: book.genre,
-          serialNo: book.serialNo,
-          copies: book.copies.toString(),
-        });
-      }
+      const loadBook = async () => {
+        const book = await getBookBySerialNo(editSerialNo);
+        if (book) {
+          setEditBookId(book.id);
+          setType(book.type as 'book' | 'movie');
+          setFormData({
+            title: book.title,
+            author: book.author,
+            genre: book.genre,
+            serialNo: book.serial_no,
+            copies: book.copies.toString(),
+          });
+        }
+      };
+      loadBook();
     }
   }, [isEditMode, editSerialNo]);
 
@@ -52,20 +60,46 @@ export default function AddBook() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
 
-    if (isEditMode) {
-      toast.success(`${type === 'book' ? 'Book' : 'Movie'} updated successfully!`, {
-        description: `"${formData.title}" has been updated`,
-      });
-    } else {
-      toast.success(`${type === 'book' ? 'Book' : 'Movie'} added successfully!`, {
-        description: `"${formData.title}" has been added to the catalog`,
-      });
+    setLoading(true);
+    try {
+      const copies = parseInt(formData.copies);
+      
+      if (isEditMode && editBookId) {
+        await updateBook(editBookId, {
+          title: formData.title,
+          author: formData.author,
+          genre: formData.genre,
+          serial_no: formData.serialNo,
+          type,
+          copies,
+        });
+        toast.success(`${type === 'book' ? 'Book' : 'Movie'} updated successfully!`, {
+          description: `"${formData.title}" has been updated`,
+        });
+      } else {
+        await addBook({
+          title: formData.title,
+          author: formData.author,
+          genre: formData.genre,
+          serial_no: formData.serialNo,
+          type,
+          copies,
+          available_copies: copies,
+        });
+        toast.success(`${type === 'book' ? 'Book' : 'Movie'} added successfully!`, {
+          description: `"${formData.title}" has been added to the catalog`,
+        });
+      }
+      navigate('/books');
+    } catch (err: any) {
+      toast.error('Error saving book', { description: err.message });
+    } finally {
+      setLoading(false);
     }
-    navigate('/books');
   };
 
   return (
@@ -157,6 +191,7 @@ export default function AddBook() {
                   value={formData.serialNo}
                   onChange={(e) => setFormData({ ...formData, serialNo: e.target.value })}
                   placeholder="e.g., BK007"
+                  disabled={isEditMode}
                   className={`h-12 rounded-xl ${errors.serialNo ? 'border-destructive' : ''}`}
                 />
                 {errors.serialNo && <p className="text-destructive text-sm">{errors.serialNo}</p>}
@@ -181,7 +216,12 @@ export default function AddBook() {
               <Button type="button" variant="outline" onClick={() => navigate('/books')} className="flex-1 h-12 rounded-xl">
                 Cancel
               </Button>
-              <Button type="submit" className="flex-1 h-12 rounded-xl gradient-primary text-primary-foreground">
+              <Button 
+                type="submit" 
+                disabled={loading}
+                className="flex-1 h-12 rounded-xl gradient-primary text-primary-foreground"
+              >
+                {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 {isEditMode ? 'Update' : 'Add'} {type === 'book' ? 'Book' : 'Movie'}
               </Button>
             </div>

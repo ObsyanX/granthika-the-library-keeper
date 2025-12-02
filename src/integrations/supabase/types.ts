@@ -14,7 +14,147 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      books: {
+        Row: {
+          author: string
+          available_copies: number
+          copies: number
+          cover_url: string | null
+          created_at: string
+          genre: string
+          id: string
+          serial_no: string
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          author: string
+          available_copies?: number
+          copies?: number
+          cover_url?: string | null
+          created_at?: string
+          genre: string
+          id?: string
+          serial_no: string
+          title: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          author?: string
+          available_copies?: number
+          copies?: number
+          cover_url?: string | null
+          created_at?: string
+          genre?: string
+          id?: string
+          serial_no?: string
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      members: {
+        Row: {
+          created_at: string
+          duration: string
+          email: string
+          end_date: string
+          id: string
+          membership_no: string
+          name: string
+          start_date: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          duration?: string
+          email: string
+          end_date: string
+          id?: string
+          membership_no: string
+          name: string
+          start_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          duration?: string
+          email?: string
+          end_date?: string
+          id?: string
+          membership_no?: string
+          name?: string
+          start_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          book_id: string
+          created_at: string
+          due_date: string
+          fine: number | null
+          fine_paid: boolean | null
+          id: string
+          issue_date: string
+          member_id: string
+          remarks: string | null
+          return_date: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          book_id: string
+          created_at?: string
+          due_date: string
+          fine?: number | null
+          fine_paid?: boolean | null
+          id?: string
+          issue_date?: string
+          member_id: string
+          remarks?: string | null
+          return_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          book_id?: string
+          created_at?: string
+          due_date?: string
+          fine?: number | null
+          fine_paid?: boolean | null
+          id?: string
+          issue_date?: string
+          member_id?: string
+          remarks?: string | null
+          return_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
