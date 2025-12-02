@@ -87,12 +87,12 @@ export default function BookAvailable() {
 
               <div className="space-y-2">
                 <Label htmlFor="authorName" className="text-foreground">Author Name</Label>
-                <Select value={authorName} onValueChange={setAuthorName}>
+                <Select value={authorName || "all"} onValueChange={(val) => setAuthorName(val === "all" ? "" : val)}>
                   <SelectTrigger className="h-12 rounded-xl">
                     <SelectValue placeholder="Select author" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Authors</SelectItem>
+                    <SelectItem value="all">All Authors</SelectItem>
                     {uniqueAuthors.map((author) => (
                       <SelectItem key={author} value={author}>{author}</SelectItem>
                     ))}

@@ -1,28 +1,37 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, RefreshCw } from 'lucide-react';
-import { format } from 'date-fns';
+import { ArrowLeft, Search, RefreshCw, Loader2 } from 'lucide-react';
+import { format, differenceInDays } from 'date-fns';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { mockTransactions } from '@/lib/mockData';
+import { toast } from 'sonner';
+import { useTransactions } from '@/hooks/useTransactions';
+import { useBooks } from '@/hooks/useBooks';
+
+const FINE_PER_DAY = 5; // ₹5 per day
 
 export default function ReturnBook() {
   const navigate = useNavigate();
+  const { issuedTransactions, overdueTransactions, returnBook, loading } = useTransactions();
+  const { books, updateBook } = useBooks();
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTransaction, setSelectedTransaction] = useState<string | null>(null);
   const [returnDate, setReturnDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
 
-  const issuedTransactions = mockTransactions.filter(t => 
-    (t.status === 'issued' || t.status === 'overdue') &&
-    (t.bookTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    t.serialNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    t.memberName.toLowerCase().includes(searchTerm.toLowerCase()))
+  const allIssuedTransactions = [...issuedTransactions, ...overdueTransactions];
+  
+  const filteredTransactions = allIssuedTransactions.filter(t => 
+    t.book?.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    t.book?.serial_no.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    t.member?.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const selectedData = mockTransactions.find(t => t.id === selectedTransaction);
+  const selectedData = allIssuedTransactions.find(t => t.id === selectedTransaction);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -32,11 +41,57 @@ export default function ReturnBook() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleConfirm = () => {
-    if (!validate()) return;
-    // Always navigate to pay fine page after return
-    navigate('/transactions/fine', { state: { transactionId: selectedTransaction } });
+  const calculateFine = () => {
+    if (!selectedData) return 0;
+    const dueDate = new Date(selectedData.due_date);
+    const returnDt = new Date(returnDate);
+    const daysOverdue = differenceInDays(returnDt, dueDate);
+    return daysOverdue > 0 ? daysOverdue * FINE_PER_DAY : 0;
   };
+
+  const handleConfirm = async () => {
+    if (!validate() || !selectedData) return;
+
+    setSubmitting(true);
+    try {
+      const fine = calculateFine();
+      await returnBook(selectedTransaction!, returnDate, fine, false);
+
+      // Increment available copies
+      const book = books.find(b => b.id === selectedData.book_id);
+      if (book) {
+        await updateBook(book.id, {
+          available_copies: book.available_copies + 1,
+        });
+      }
+
+      if (fine > 0) {
+        toast.success('Book returned!', {
+          description: `Fine of ₹${fine} is pending. Redirecting to pay fine...`,
+        });
+        navigate('/transactions/fine', { state: { transactionId: selectedTransaction } });
+      } else {
+        toast.success('Book returned successfully!', {
+          description: `"${selectedData.book?.title}" has been returned`,
+        });
+        navigate('/transactions');
+      }
+    } catch (error: any) {
+      toast.error('Failed to return book', { description: error.message });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -67,11 +122,11 @@ export default function ReturnBook() {
           </div>
 
           {/* Search Results */}
-          {issuedTransactions.length > 0 && (
+          {filteredTransactions.length > 0 && (
             <div className="mb-8 space-y-2">
               <Label className="text-foreground">Select Transaction</Label>
               <div className="max-h-64 overflow-y-auto space-y-2 rounded-xl border border-border p-2">
-                {issuedTransactions.map((transaction) => (
+                {filteredTransactions.map((transaction) => (
                   <label
                     key={transaction.id}
                     className={`flex items-center gap-4 p-4 rounded-lg cursor-pointer transition-colors ${
@@ -90,9 +145,9 @@ export default function ReturnBook() {
                       <RefreshCw className="w-5 h-5 text-primary" />
                     </div>
                     <div className="flex-1">
-                      <p className="font-medium text-foreground">{transaction.bookTitle}</p>
+                      <p className="font-medium text-foreground">{transaction.book?.title}</p>
                       <p className="text-sm text-muted-foreground">
-                        {transaction.memberName} • Serial: {transaction.serialNo}
+                        {transaction.member?.name} • Serial: {transaction.book?.serial_no}
                       </p>
                     </div>
                     <div className="text-right">
@@ -101,7 +156,7 @@ export default function ReturnBook() {
                       }`}>
                         {transaction.status}
                       </span>
-                      <p className="text-xs text-muted-foreground mt-1">Due: {transaction.dueDate}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Due: {transaction.due_date}</p>
                     </div>
                   </label>
                 ))}
@@ -116,32 +171,32 @@ export default function ReturnBook() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label className="text-foreground">Book Name</Label>
-                  <Input value={selectedData.bookTitle} disabled className="h-12 rounded-xl bg-muted" />
+                  <Input value={selectedData.book?.title || ''} disabled className="h-12 rounded-xl bg-muted" />
                 </div>
 
                 <div className="space-y-2">
                   <Label className="text-foreground">Author</Label>
-                  <Input value={selectedData.author} disabled className="h-12 rounded-xl bg-muted" />
+                  <Input value={selectedData.book?.author || ''} disabled className="h-12 rounded-xl bg-muted" />
                 </div>
 
                 <div className="space-y-2">
                   <Label className="text-foreground">Serial Number</Label>
-                  <Input value={selectedData.serialNo} disabled className="h-12 rounded-xl bg-muted" />
+                  <Input value={selectedData.book?.serial_no || ''} disabled className="h-12 rounded-xl bg-muted" />
                 </div>
 
                 <div className="space-y-2">
                   <Label className="text-foreground">Member</Label>
-                  <Input value={selectedData.memberName} disabled className="h-12 rounded-xl bg-muted" />
+                  <Input value={selectedData.member?.name || ''} disabled className="h-12 rounded-xl bg-muted" />
                 </div>
 
                 <div className="space-y-2">
                   <Label className="text-foreground">Issue Date</Label>
-                  <Input value={selectedData.issueDate} disabled className="h-12 rounded-xl bg-muted" />
+                  <Input value={selectedData.issue_date} disabled className="h-12 rounded-xl bg-muted" />
                 </div>
 
                 <div className="space-y-2">
                   <Label className="text-foreground">Due Date</Label>
-                  <Input value={selectedData.dueDate} disabled className="h-12 rounded-xl bg-muted" />
+                  <Input value={selectedData.due_date} disabled className="h-12 rounded-xl bg-muted" />
                 </div>
 
                 <div className="space-y-2">
@@ -154,12 +209,19 @@ export default function ReturnBook() {
                   />
                   {errors.returnDate && <p className="text-destructive text-sm">{errors.returnDate}</p>}
                 </div>
+
+                {calculateFine() > 0 && (
+                  <div className="space-y-2">
+                    <Label className="text-foreground">Estimated Fine</Label>
+                    <Input value={`₹${calculateFine()}`} disabled className="h-12 rounded-xl bg-muted text-destructive font-semibold" />
+                  </div>
+                )}
               </div>
 
               {selectedData.status === 'overdue' && (
                 <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20">
                   <p className="text-destructive font-medium">⚠️ This book is overdue!</p>
-                  <p className="text-sm text-muted-foreground">Fine will be calculated on the next screen.</p>
+                  <p className="text-sm text-muted-foreground">Fine: ₹{FINE_PER_DAY}/day after due date</p>
                 </div>
               )}
 
@@ -167,17 +229,25 @@ export default function ReturnBook() {
                 <Button type="button" variant="outline" onClick={() => navigate('/transactions')} className="flex-1 h-12 rounded-xl">
                   Cancel
                 </Button>
-                <Button onClick={handleConfirm} className="flex-1 h-12 rounded-xl gradient-primary text-primary-foreground">
+                <Button onClick={handleConfirm} disabled={submitting} className="flex-1 h-12 rounded-xl gradient-primary text-primary-foreground">
+                  {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                   Confirm Return
                 </Button>
               </div>
             </div>
           )}
 
-          {issuedTransactions.length === 0 && searchTerm && (
+          {filteredTransactions.length === 0 && searchTerm && (
             <div className="text-center py-8">
               <RefreshCw className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
               <p className="text-muted-foreground">No issued books found matching your search</p>
+            </div>
+          )}
+
+          {filteredTransactions.length === 0 && !searchTerm && (
+            <div className="text-center py-8">
+              <RefreshCw className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
+              <p className="text-muted-foreground">No books currently issued</p>
             </div>
           )}
         </div>

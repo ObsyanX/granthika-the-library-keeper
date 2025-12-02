@@ -9,10 +9,12 @@ export function Header() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/');
   };
+
+  const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'User';
 
   return (
     <header className="glass-card sticky top-0 z-30 border-b border-border/50">
@@ -30,10 +32,7 @@ export function Header() {
         <div className="flex items-center gap-4">
           {user && (
             <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-accent/50 text-sm">
-              <span className="font-medium text-foreground">{user.name}</span>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary capitalize">
-                {user.role}
-              </span>
+              <span className="font-medium text-foreground">{userName}</span>
             </div>
           )}
 
