@@ -2,6 +2,7 @@
 
 # ✨📚 **Granthikaḥ — The Library Keeper**  
 ### *A futuristic, animation-inspired Library Management System built with love, logic & books.*  
+**WEBSITE: https://granthikah.lovable.app**
 <br>
 
 <img src="https://img.shields.io/badge/Status-Active-34D399?style=for-the-badge" />
