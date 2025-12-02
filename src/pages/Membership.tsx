@@ -1,20 +1,31 @@
 import { useState } from 'react';
-import { Plus, Search, Edit, Users } from 'lucide-react';
+import { Plus, Search, Edit, Users, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { mockMembers } from '@/lib/mockData';
+import { useMembers } from '@/hooks/useMembers';
 
 export default function Membership() {
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
+  const { members, loading } = useMembers();
 
-  const filteredMembers = mockMembers.filter(member =>
+  const filteredMembers = members.filter(member =>
     member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.membershipNo.toLowerCase().includes(searchTerm.toLowerCase())
+    member.membership_no.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -25,10 +36,16 @@ export default function Membership() {
             <h1 className="font-display text-2xl font-bold text-foreground">Membership Management</h1>
             <p className="text-muted-foreground">Manage library memberships</p>
           </div>
-          <Button onClick={() => navigate('/membership/add')} className="gradient-primary text-primary-foreground rounded-xl">
-            <Plus className="w-4 h-4 mr-2" />
-            Add Membership
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => navigate('/membership/update')} variant="outline" className="rounded-xl">
+              <Edit className="w-4 h-4 mr-2" />
+              Update
+            </Button>
+            <Button onClick={() => navigate('/membership/add')} className="gradient-primary text-primary-foreground rounded-xl">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Membership
+            </Button>
+          </div>
         </div>
 
         {/* Search */}
@@ -54,7 +71,6 @@ export default function Membership() {
                   <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Duration</th>
                   <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">End Date</th>
                   <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Status</th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -64,11 +80,11 @@ export default function Membership() {
                       <p className="font-medium text-foreground">{member.name}</p>
                       <p className="text-sm text-muted-foreground">{member.email}</p>
                     </td>
-                    <td className="py-4 px-6 text-foreground font-mono">{member.membershipNo}</td>
+                    <td className="py-4 px-6 text-foreground font-mono">{member.membership_no}</td>
                     <td className="py-4 px-6 text-muted-foreground">
                       {member.duration === '6months' ? '6 Months' : member.duration === '1year' ? '1 Year' : '2 Years'}
                     </td>
-                    <td className="py-4 px-6 text-muted-foreground">{member.endDate}</td>
+                    <td className="py-4 px-6 text-muted-foreground">{member.end_date}</td>
                     <td className="py-4 px-6">
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                         member.status === 'active' ? 'bg-accent text-accent-foreground' :
@@ -77,17 +93,6 @@ export default function Membership() {
                       }`}>
                         {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
                       </span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => navigate(`/membership/edit/${member.membershipNo}`)}
-                        className="rounded-lg"
-                      >
-                        <Edit className="w-4 h-4 mr-2" />
-                        Edit
-                      </Button>
                     </td>
                   </tr>
                 ))}

@@ -1,45 +1,96 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Eye, EyeOff, User, Lock } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { BookOpen, Eye, EyeOff, User, Lock, Mail } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Moon, Sun } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
-export default function Login() {
+export default function Auth() {
+  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'admin' | 'user'>('user');
+  const [name, setName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string }>({});
+  const [loading, setLoading] = useState(false);
   
-  const { login } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        navigate('/dashboard', { replace: true });
+      }
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        navigate('/dashboard', { replace: true });
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
   const validate = () => {
-    const newErrors: { email?: string; password?: string } = {};
+    const newErrors: { email?: string; password?: string; name?: string } = {};
     if (!email.trim()) newErrors.email = 'Email is required';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = 'Please enter a valid email';
+    }
     if (!password.trim()) newErrors.password = 'Password is required';
+    else if (password.length < 6) newErrors.password = 'Password must be at least 6 characters';
+    if (!isLogin && !name.trim()) newErrors.name = 'Name is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
 
-    const success = login(email, password, role);
-    if (success) {
-      toast.success('Welcome to Granthikaḥ!', {
-        description: `Logged in as ${role === 'admin' ? 'Administrator' : 'Member'}`,
-      });
-      navigate('/dashboard');
-    } else {
-      toast.error('Login failed', { description: 'Please check your credentials' });
+    setLoading(true);
+    try {
+      if (isLogin) {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+          if (error.message.includes('Invalid login credentials')) {
+            toast.error('Invalid credentials', { description: 'Please check your email and password' });
+          } else {
+            toast.error('Login failed', { description: error.message });
+          }
+          return;
+        }
+        toast.success('Welcome to Granthikaḥ!', { description: 'Logged in successfully' });
+      } else {
+        const redirectUrl = `${window.location.origin}/`;
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: redirectUrl,
+            data: { name }
+          }
+        });
+        if (error) {
+          if (error.message.includes('already registered')) {
+            toast.error('Account exists', { description: 'This email is already registered. Please login.' });
+          } else {
+            toast.error('Signup failed', { description: error.message });
+          }
+          return;
+        }
+        toast.success('Account created!', { description: 'Welcome to Granthikaḥ!' });
+      }
+    } catch (err: any) {
+      toast.error('An error occurred', { description: err.message });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -62,7 +113,7 @@ export default function Login() {
         {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
       </Button>
 
-      {/* Login Card */}
+      {/* Auth Card */}
       <div className="w-full max-w-md animate-fade-in">
         <div className="neu-card bg-card rounded-3xl p-8">
           {/* Logo */}
@@ -74,38 +125,56 @@ export default function Login() {
             <p className="text-muted-foreground mt-1">ग्रन्थिकः • The Keeper of Books</p>
           </div>
 
-          {/* Role Toggle */}
+          {/* Toggle Login/Signup */}
           <div className="flex rounded-xl p-1 bg-muted mb-6">
             <button
               type="button"
-              onClick={() => setRole('user')}
+              onClick={() => setIsLogin(true)}
               className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
-                role === 'user'
+                isLogin
                   ? 'bg-card text-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              Member
+              Sign In
             </button>
             <button
               type="button"
-              onClick={() => setRole('admin')}
+              onClick={() => setIsLogin(false)}
               className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
-                role === 'admin'
+                !isLogin
                   ? 'bg-card text-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              Administrator
+              Sign Up
             </button>
           </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
+            {!isLogin && (
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-foreground">Full Name</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    id="name"
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Enter your name"
+                    className={`pl-10 h-12 rounded-xl ${errors.name ? 'border-destructive' : ''}`}
+                  />
+                </div>
+                {errors.name && <p className="text-destructive text-sm">{errors.name}</p>}
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="email" className="text-foreground">Email</Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   id="email"
                   type="email"
@@ -143,19 +212,24 @@ export default function Login() {
 
             <Button
               type="submit"
-              className="w-full h-12 rounded-xl gradient-primary text-primary-foreground font-semibold text-base hover:opacity-90 transition-opacity"
+              disabled={loading}
+              className="w-full h-12 rounded-xl gradient-primary text-primary-foreground font-semibold text-base hover:opacity-90 transition-opacity disabled:opacity-50"
             >
-              Sign In
+              {loading ? 'Please wait...' : isLogin ? 'Sign In' : 'Create Account'}
             </Button>
           </form>
 
-          <button className="w-full text-center mt-4 text-sm text-primary hover:underline">
-            Forgot password?
-          </button>
-
-          {/* Demo Hint */}
+          {/* Info */}
           <div className="mt-6 p-3 rounded-xl bg-accent/50 text-sm text-center">
-            <p className="text-muted-foreground">Demo: Enter any email & password to login</p>
+            <p className="text-muted-foreground">
+              {isLogin ? "Don't have an account? " : "Already have an account? "}
+              <button
+                onClick={() => setIsLogin(!isLogin)}
+                className="text-primary hover:underline font-medium"
+              >
+                {isLogin ? 'Sign up' : 'Sign in'}
+              </button>
+            </p>
           </div>
         </div>
       </div>

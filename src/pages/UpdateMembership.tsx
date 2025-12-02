@@ -1,55 +1,63 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search } from 'lucide-react';
+import { ArrowLeft, Search, Loader2 } from 'lucide-react';
+import { format, addMonths, addYears } from 'date-fns';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { mockMembers, Member } from '@/lib/mockData';
+import { useMembers, Member } from '@/hooks/useMembers';
 
 type Duration = '6months' | '1year' | '2years';
 type Action = 'extend' | 'cancel';
 
+function calculateNewEndDate(currentEndDate: string, duration: Duration): string {
+  const end = new Date(currentEndDate);
+  switch (duration) {
+    case '6months':
+      return format(addMonths(end, 6), 'yyyy-MM-dd');
+    case '1year':
+      return format(addYears(end, 1), 'yyyy-MM-dd');
+    case '2years':
+      return format(addYears(end, 2), 'yyyy-MM-dd');
+  }
+}
+
 export default function UpdateMembership() {
   const navigate = useNavigate();
+  const { getMemberByMembershipNo, updateMember } = useMembers();
+  
   const [membershipNo, setMembershipNo] = useState('');
   const [foundMember, setFoundMember] = useState<Member | null>(null);
   const [action, setAction] = useState<Action>('extend');
   const [duration, setDuration] = useState<Duration>('6months');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [searchError, setSearchError] = useState('');
+  const [searching, setSearching] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  // Auto-populate when membership number matches
-  useEffect(() => {
-    if (membershipNo.trim()) {
-      const member = mockMembers.find(
-        m => m.membershipNo.toLowerCase() === membershipNo.toLowerCase()
-      );
-      if (member) {
-        setFoundMember(member);
-        setSearchError('');
-      } else {
-        setFoundMember(null);
-      }
-    } else {
-      setFoundMember(null);
-    }
-  }, [membershipNo]);
-
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (!membershipNo.trim()) {
       setSearchError('Please enter a membership number');
       return;
     }
-    const member = mockMembers.find(
-      m => m.membershipNo.toLowerCase() === membershipNo.toLowerCase()
-    );
-    if (!member) {
-      setSearchError('Member not found with this membership number');
-    } else {
-      setFoundMember(member);
-      setSearchError('');
+    
+    setSearching(true);
+    setSearchError('');
+    
+    try {
+      const member = await getMemberByMembershipNo(membershipNo.trim());
+      if (!member) {
+        setSearchError('Member not found with this membership number');
+        setFoundMember(null);
+      } else {
+        setFoundMember(member as Member);
+      }
+    } catch (error: any) {
+      setSearchError('Error searching for member');
+    } finally {
+      setSearching(false);
     }
   };
 
@@ -61,21 +69,34 @@ export default function UpdateMembership() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (!validate() || !foundMember) return;
 
-    if (action === 'cancel') {
-      toast.success('Membership cancelled!', {
-        description: `${foundMember?.name}'s membership has been cancelled`,
-      });
-    } else {
-      const durationLabel = duration === '6months' ? '6 months' : duration === '1year' ? '1 year' : '2 years';
-      toast.success('Membership extended!', {
-        description: `${foundMember?.name}'s membership extended by ${durationLabel}`,
-      });
+    setSubmitting(true);
+    try {
+      if (action === 'cancel') {
+        await updateMember(foundMember.id, { status: 'cancelled' });
+        toast.success('Membership cancelled!', {
+          description: `${foundMember.name}'s membership has been cancelled`,
+        });
+      } else {
+        const newEndDate = calculateNewEndDate(foundMember.end_date, duration);
+        await updateMember(foundMember.id, { 
+          end_date: newEndDate,
+          status: 'active',
+        });
+        const durationLabel = duration === '6months' ? '6 months' : duration === '1year' ? '1 year' : '2 years';
+        toast.success('Membership extended!', {
+          description: `${foundMember.name}'s membership extended by ${durationLabel}`,
+        });
+      }
+      navigate('/membership');
+    } catch (error: any) {
+      toast.error('Failed to update membership', { description: error.message });
+    } finally {
+      setSubmitting(false);
     }
-    navigate('/membership');
   };
 
   return (
@@ -100,8 +121,8 @@ export default function UpdateMembership() {
                 placeholder="Enter membership number (e.g., MEM001)"
                 className={`flex-1 h-12 rounded-xl ${errors.membershipNo || searchError ? 'border-destructive' : ''}`}
               />
-              <Button onClick={handleSearch} className="h-12 px-6 rounded-xl gradient-primary text-primary-foreground">
-                <Search className="w-4 h-4 mr-2" />
+              <Button onClick={handleSearch} disabled={searching} className="h-12 px-6 rounded-xl gradient-primary text-primary-foreground">
+                {searching ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Search className="w-4 h-4 mr-2" />}
                 Find
               </Button>
             </div>
@@ -126,12 +147,12 @@ export default function UpdateMembership() {
 
                 <div className="space-y-2">
                   <Label className="text-foreground">Start Date</Label>
-                  <Input value={foundMember.startDate} disabled className="h-12 rounded-xl bg-muted" />
+                  <Input value={foundMember.start_date} disabled className="h-12 rounded-xl bg-muted" />
                 </div>
 
                 <div className="space-y-2">
                   <Label className="text-foreground">End Date</Label>
-                  <Input value={foundMember.endDate} disabled className="h-12 rounded-xl bg-muted" />
+                  <Input value={foundMember.end_date} disabled className="h-12 rounded-xl bg-muted" />
                 </div>
 
                 <div className="space-y-2">
@@ -247,13 +268,15 @@ export default function UpdateMembership() {
                   Cancel
                 </Button>
                 <Button 
-                  type="submit" 
+                  type="submit"
+                  disabled={submitting}
                   className={`flex-1 h-12 rounded-xl ${
                     action === 'cancel' 
                       ? 'bg-destructive hover:bg-destructive/90 text-destructive-foreground' 
                       : 'gradient-primary text-primary-foreground'
                   }`}
                 >
+                  {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                   {action === 'extend' ? 'Extend Membership' : 'Cancel Membership'}
                 </Button>
               </div>

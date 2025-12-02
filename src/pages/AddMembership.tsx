@@ -1,17 +1,37 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
-import { format } from 'date-fns';
+import { ArrowLeft, Loader2 } from 'lucide-react';
+import { format, addMonths, addYears } from 'date-fns';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { useMembers } from '@/hooks/useMembers';
 
 type Duration = '6months' | '1year' | '2years';
 
+function generateMembershipNo(): string {
+  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+  return `MEM${random}`;
+}
+
+function calculateEndDate(startDate: string, duration: Duration): string {
+  const start = new Date(startDate);
+  switch (duration) {
+    case '6months':
+      return format(addMonths(start, 6), 'yyyy-MM-dd');
+    case '1year':
+      return format(addYears(start, 1), 'yyyy-MM-dd');
+    case '2years':
+      return format(addYears(start, 2), 'yyyy-MM-dd');
+  }
+}
+
 export default function AddMembership() {
   const navigate = useNavigate();
+  const { addMember } = useMembers();
+  
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -19,6 +39,7 @@ export default function AddMembership() {
   });
   const [duration, setDuration] = useState<Duration>('6months');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -32,14 +53,34 @@ export default function AddMembership() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
 
-    toast.success('Membership created successfully!', {
-      description: `${formData.name} has been registered`,
-    });
-    navigate('/membership');
+    setSubmitting(true);
+    try {
+      const membershipNo = generateMembershipNo();
+      const endDate = calculateEndDate(formData.startDate, duration);
+
+      await addMember({
+        membership_no: membershipNo,
+        name: formData.name,
+        email: formData.email,
+        start_date: formData.startDate,
+        duration,
+        end_date: endDate,
+        status: 'active',
+      });
+
+      toast.success('Membership created successfully!', {
+        description: `${formData.name} has been registered with ID: ${membershipNo}`,
+      });
+      navigate('/membership');
+    } catch (error: any) {
+      toast.error('Failed to create membership', { description: error.message });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -127,7 +168,8 @@ export default function AddMembership() {
               <Button type="button" variant="outline" onClick={() => navigate('/membership')} className="flex-1 h-12 rounded-xl">
                 Cancel
               </Button>
-              <Button type="submit" className="flex-1 h-12 rounded-xl gradient-primary text-primary-foreground">
+              <Button type="submit" disabled={submitting} className="flex-1 h-12 rounded-xl gradient-primary text-primary-foreground">
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                 Create Membership
               </Button>
             </div>

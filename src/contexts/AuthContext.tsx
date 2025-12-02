@@ -1,16 +1,12 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: 'admin' | 'user';
-}
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string, role: 'admin' | 'user') => boolean;
-  logout: () => void;
+  session: Session | null;
+  loading: boolean;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
 }
 
@@ -18,27 +14,33 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const login = (email: string, password: string, role: 'admin' | 'user'): boolean => {
-    // Mock authentication - in real app, this would validate against backend
-    if (email && password) {
-      setUser({
-        id: '1',
-        name: role === 'admin' ? 'Admin User' : 'Library Member',
-        email,
-        role,
-      });
-      return true;
-    }
-    return false;
-  };
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
 
-  const logout = () => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
+    setSession(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, session, loading, logout, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );

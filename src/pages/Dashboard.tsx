@@ -1,8 +1,10 @@
-import { BookOpen, Users, CreditCard, RefreshCw, FileText, TrendingUp, AlertTriangle, CheckCircle } from 'lucide-react';
+import { BookOpen, Users, CreditCard, RefreshCw, FileText, TrendingUp, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { mockBooks, mockMembers, mockTransactions } from '@/lib/mockData';
+import { useBooks } from '@/hooks/useBooks';
+import { useMembers } from '@/hooks/useMembers';
+import { useTransactions } from '@/hooks/useTransactions';
 
 interface StatCardProps {
   icon: React.ElementType;
@@ -14,13 +16,6 @@ interface StatCardProps {
 }
 
 function StatCard({ icon: Icon, label, value, trend, color, onClick }: StatCardProps) {
-  const colorClasses = {
-    primary: 'from-primary to-primary/80',
-    secondary: 'from-secondary to-secondary/80',
-    accent: 'from-accent to-accent/80',
-    destructive: 'from-destructive to-destructive/80',
-  };
-
   const iconBgClasses = {
     primary: 'bg-primary/10 text-primary',
     secondary: 'bg-secondary/20 text-secondary-foreground',
@@ -77,13 +72,29 @@ function QuickAction({ icon: Icon, label, description, onClick }: QuickActionPro
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const isAdmin = user?.role === 'admin';
+  
+  const { books, availableBooks, loading: booksLoading } = useBooks();
+  const { activeMembers, loading: membersLoading } = useMembers();
+  const { transactions, issuedTransactions, overdueTransactions, loading: transactionsLoading } = useTransactions();
 
-  const totalBooks = mockBooks.length;
-  const availableBooks = mockBooks.reduce((sum, book) => sum + book.availableCopies, 0);
-  const activeMembers = mockMembers.filter(m => m.status === 'active').length;
-  const overdueBooks = mockTransactions.filter(t => t.status === 'overdue').length;
-  const issuedBooks = mockTransactions.filter(t => t.status === 'issued').length;
+  const loading = booksLoading || membersLoading || transactionsLoading;
+
+  const totalBooks = books.length;
+  const totalAvailableCopies = books.reduce((sum, book) => sum + book.available_copies, 0);
+  const activeMembersCount = activeMembers.length;
+  const overdueCount = overdueTransactions.length;
+
+  const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'User';
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -91,10 +102,10 @@ export default function Dashboard() {
         {/* Welcome Section */}
         <div className="animate-fade-in">
           <h1 className="font-display text-3xl font-bold text-foreground">
-            Namaste, {user?.name}! 🙏
+            Namaste, {userName}! 🙏
           </h1>
           <p className="text-muted-foreground mt-1">
-            Welcome to your {isAdmin ? 'administration' : 'member'} dashboard
+            Welcome to your dashboard
           </p>
         </div>
 
@@ -104,31 +115,27 @@ export default function Dashboard() {
             icon={BookOpen}
             label="Total Books"
             value={totalBooks}
-            trend="+12%"
             color="primary"
             onClick={() => navigate('/books')}
           />
           <StatCard
             icon={CheckCircle}
-            label="Available"
-            value={availableBooks}
+            label="Available Copies"
+            value={totalAvailableCopies}
             color="accent"
             onClick={() => navigate('/reports')}
           />
-          {isAdmin && (
-            <StatCard
-              icon={Users}
-              label="Active Members"
-              value={activeMembers}
-              trend="+5%"
-              color="secondary"
-              onClick={() => navigate('/membership')}
-            />
-          )}
+          <StatCard
+            icon={Users}
+            label="Active Members"
+            value={activeMembersCount}
+            color="secondary"
+            onClick={() => navigate('/membership')}
+          />
           <StatCard
             icon={AlertTriangle}
             label="Overdue"
-            value={overdueBooks}
+            value={overdueCount}
             color="destructive"
             onClick={() => navigate('/reports')}
           />
@@ -156,28 +163,24 @@ export default function Dashboard() {
               description="Access detailed reports"
               onClick={() => navigate('/reports')}
             />
-            {isAdmin && (
-              <>
-                <QuickAction
-                  icon={BookOpen}
-                  label="Add Book"
-                  description="Add new book to catalog"
-                  onClick={() => navigate('/books/add')}
-                />
-                <QuickAction
-                  icon={Users}
-                  label="Add Member"
-                  description="Register new membership"
-                  onClick={() => navigate('/membership/add')}
-                />
-                <QuickAction
-                  icon={CreditCard}
-                  label="Pay Fine"
-                  description="Process fine payments"
-                  onClick={() => navigate('/transactions/fine')}
-                />
-              </>
-            )}
+            <QuickAction
+              icon={BookOpen}
+              label="Add Book"
+              description="Add new book to catalog"
+              onClick={() => navigate('/books/add')}
+            />
+            <QuickAction
+              icon={Users}
+              label="Add Member"
+              description="Register new membership"
+              onClick={() => navigate('/membership/add')}
+            />
+            <QuickAction
+              icon={CreditCard}
+              label="Pay Fine"
+              description="Process fine payments"
+              onClick={() => navigate('/transactions/fine')}
+            />
           </div>
         </div>
 
@@ -197,15 +200,15 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {mockTransactions.slice(0, 5).map((transaction) => (
+                  {transactions.slice(0, 5).map((transaction) => (
                     <tr key={transaction.id} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
                       <td className="py-4 px-6">
-                        <p className="font-medium text-foreground">{transaction.bookTitle}</p>
-                        <p className="text-sm text-muted-foreground">{transaction.author}</p>
+                        <p className="font-medium text-foreground">{transaction.book?.title || 'Unknown'}</p>
+                        <p className="text-sm text-muted-foreground">{transaction.book?.author || ''}</p>
                       </td>
-                      <td className="py-4 px-6 text-foreground">{transaction.memberName}</td>
-                      <td className="py-4 px-6 text-muted-foreground">{transaction.issueDate}</td>
-                      <td className="py-4 px-6 text-muted-foreground">{transaction.dueDate}</td>
+                      <td className="py-4 px-6 text-foreground">{transaction.member?.name || 'Unknown'}</td>
+                      <td className="py-4 px-6 text-muted-foreground">{transaction.issue_date}</td>
+                      <td className="py-4 px-6 text-muted-foreground">{transaction.due_date}</td>
                       <td className="py-4 px-6">
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                           transaction.status === 'issued' ? 'bg-primary/10 text-primary' :
@@ -217,6 +220,13 @@ export default function Dashboard() {
                       </td>
                     </tr>
                   ))}
+                  {transactions.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="py-8 text-center text-muted-foreground">
+                        No transactions yet
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>

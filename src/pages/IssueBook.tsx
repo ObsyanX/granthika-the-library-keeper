@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, BookOpen } from 'lucide-react';
+import { ArrowLeft, Search, BookOpen, Loader2 } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -9,13 +9,20 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { mockBooks, mockMembers } from '@/lib/mockData';
+import { useBooks } from '@/hooks/useBooks';
+import { useMembers } from '@/hooks/useMembers';
+import { useTransactions } from '@/hooks/useTransactions';
 
 export default function IssueBook() {
   const navigate = useNavigate();
+  const { books, availableBooks, updateBook } = useBooks();
+  const { activeMembers, loading: membersLoading } = useMembers();
+  const { createTransaction } = useTransactions();
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBook, setSelectedBook] = useState<string | null>(null);
   const [searchError, setSearchError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     memberId: '',
     issueDate: format(new Date(), 'yyyy-MM-dd'),
@@ -24,14 +31,13 @@ export default function IssueBook() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const availableBooks = mockBooks.filter(book => 
-    book.availableCopies > 0 &&
-    (book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredBooks = availableBooks.filter(book => 
+    book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     book.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    book.serialNo.toLowerCase().includes(searchTerm.toLowerCase()))
+    book.serial_no.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const selectedBookData = mockBooks.find(b => b.id === selectedBook);
+  const selectedBookData = books.find(b => b.id === selectedBook);
 
   const handleSearch = () => {
     if (!searchTerm.trim()) {
@@ -60,14 +66,34 @@ export default function IssueBook() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (!validate() || !selectedBook || !selectedBookData) return;
 
-    toast.success('Book issued successfully!', {
-      description: `"${selectedBookData?.title}" has been issued`,
-    });
-    navigate('/transactions');
+    setSubmitting(true);
+    try {
+      await createTransaction({
+        book_id: selectedBook,
+        member_id: formData.memberId,
+        issue_date: formData.issueDate,
+        due_date: formData.returnDate,
+        remarks: formData.remarks || undefined,
+      });
+
+      // Decrement available copies
+      await updateBook(selectedBook, {
+        available_copies: selectedBookData.available_copies - 1,
+      });
+
+      toast.success('Book issued successfully!', {
+        description: `"${selectedBookData.title}" has been issued`,
+      });
+      navigate('/transactions');
+    } catch (error: any) {
+      toast.error('Failed to issue book', { description: error.message });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -103,11 +129,11 @@ export default function IssueBook() {
           </div>
 
           {/* Search Results */}
-          {searchTerm && availableBooks.length > 0 && (
+          {searchTerm && filteredBooks.length > 0 && (
             <div className="mb-8 space-y-2">
               <Label className="text-foreground">Select a Book</Label>
               <div className="max-h-48 overflow-y-auto space-y-2 rounded-xl border border-border p-2">
-                {availableBooks.map((book) => (
+                {filteredBooks.map((book) => (
                   <label
                     key={book.id}
                     className={`flex items-center gap-4 p-3 rounded-lg cursor-pointer transition-colors ${
@@ -127,10 +153,10 @@ export default function IssueBook() {
                     </div>
                     <div className="flex-1">
                       <p className="font-medium text-foreground">{book.title}</p>
-                      <p className="text-sm text-muted-foreground">{book.author} • {book.serialNo}</p>
+                      <p className="text-sm text-muted-foreground">{book.author} • {book.serial_no}</p>
                     </div>
                     <span className="text-sm text-accent-foreground bg-accent px-2 py-1 rounded">
-                      {book.availableCopies} available
+                      {book.available_copies} available
                     </span>
                   </label>
                 ))}
@@ -160,11 +186,17 @@ export default function IssueBook() {
                       <SelectValue placeholder="Select member" />
                     </SelectTrigger>
                     <SelectContent>
-                      {mockMembers.filter(m => m.status === 'active').map((member) => (
-                        <SelectItem key={member.id} value={member.id}>
-                          {member.name} ({member.membershipNo})
-                        </SelectItem>
-                      ))}
+                      {membersLoading ? (
+                        <div className="p-2 text-center text-muted-foreground">Loading...</div>
+                      ) : activeMembers.length === 0 ? (
+                        <div className="p-2 text-center text-muted-foreground">No active members</div>
+                      ) : (
+                        activeMembers.map((member) => (
+                          <SelectItem key={member.id} value={member.id}>
+                            {member.name} ({member.membership_no})
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                   {errors.memberId && <p className="text-destructive text-sm">{errors.memberId}</p>}
@@ -210,7 +242,8 @@ export default function IssueBook() {
                 <Button type="button" variant="outline" onClick={() => navigate('/transactions')} className="flex-1 h-12 rounded-xl">
                   Cancel
                 </Button>
-                <Button type="submit" className="flex-1 h-12 rounded-xl gradient-primary text-primary-foreground">
+                <Button type="submit" disabled={submitting} className="flex-1 h-12 rounded-xl gradient-primary text-primary-foreground">
+                  {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                   Issue Book
                 </Button>
               </div>
