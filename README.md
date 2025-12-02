@@ -1,73 +1,232 @@
-# Welcome to your Lovable project
+<div align="center">
 
-## Project info
+# ✨📚 **Granthikaḥ — The Library Keeper**  
+### *A futuristic, animation-inspired Library Management System built with love, logic & books.*  
+<br>
 
-**URL**: https://lovable.dev/projects/f5ea9633-97b4-4f46-95d1-7eb648f24310
+<img src="https://img.shields.io/badge/Status-Active-34D399?style=for-the-badge" />
+<img src="https://img.shields.io/badge/Frontend-Modern%20UI-8B5CF6?style=for-the-badge" />
+<img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" />
+<img src="https://img.shields.io/badge/Contributors-1-yellow?style=for-the-badge" />
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+💠 *“Where knowledge meets elegance, and management becomes an experience.”*  
+🌈 Smooth views • 🎭 Animated transitions • 📘 Book-centric experience
 
-**Use Lovable**
+</div>
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/f5ea9633-97b4-4f46-95d1-7eb648f24310) and start prompting.
+---
 
-Changes made via Lovable will be committed automatically to this repo.
+# 🌟 **Why Granthikaḥ?**  
 
-**Use your preferred IDE**
+Libraries deserve more than old-school, boring systems.  
+**Granthikaḥ** reimagines library management with a blend of:
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+✨ *glassmorphism aesthetics*  
+🎨 *soft and fluid micro-interactions*  
+📌 *intuitive role-based flows*  
+💡 *smart validations*  
+⚡ *clean transitions & futuristic layout*
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Everything feels **light**, **fast**, **alive**, and **book-friendly**.
 
-Follow these steps:
+### 🌈 **Key Highlights**
+- 💫 *Glass + neon highlights:* modern, animated UI panels  
+- 🔐 *Role-based UX:*  
+  **Admin → Maintenance + Reports + Transactions**  
+  **User → Reports + Transactions**  
+- 📅 *Smart Forms:* powerful validation, auto-filled logic, constraints  
+- 📦 *Modular architecture:* Easy to scale, theme, and extend  
+- 📱 *Responsive:* mobile-friendly, fluid, adaptive layout  
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+---
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# 📂 **Table of Contents**
+- [Demo / Screenshots](#demo--screenshots)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+- [Project Structure](#project-structure)
+- [How to Use](#how-to-use)
+- [Core Features](#core-features)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+- [License](#license)
+- [Credits](#credits)
 
-# Step 3: Install the necessary dependencies.
-npm i
+---
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+# 🧰 **Tech Stack**
+- ⚛️ **React** (recommended; supports animations beautifully)
+- 🎨 **HTML5 / Tailwind / CSS3**
+- 🌀 Animated Transitions (Framer Motion / CSS transitions)
+- 📁 JSON Mock Data (books, members, transactions)
 
-**Edit a file directly in GitHub**
+---
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+# 🚀 **Getting Started**
 
-**Use GitHub Codespaces**
+```bash
+# 1. Clone the repository  
+git clone https://github.com/ObsyanX/granthika-the-library-keeper.git  
+cd granthika-the-library-keeper  
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+# 2. Install dependencies  
+npm install  
 
-## What technologies are used for this project?
+# 3. Run the development server  
+npm start  
 
-This project is built with:
+# 4. Visit in browser  
+http://localhost:3000/
+If you're using a different framework, adapt steps accordingly.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+🗂️ Project Structure
+bash
+Copy code
+/src
+  /components        # Animated UI blocks, reusable elements  
+  /pages             # Login, Dashboard, Maintenance, Reports, Transactions  
+  /data              # JSON files: books, members, transactions  
+  /styles            # CSS / Tailwind / theme utilities  
+  /utils             # Helpers: validation, date checks, role guards  
+  App.js             # Routing + base layout  
+  index.js           # Entry point  
+🎯 How to Use (Flow Overview)
+🔐 Login
+Choose:
 
-## How can I deploy this project?
+Admin
 
-Simply open [Lovable](https://lovable.dev/projects/f5ea9633-97b4-4f46-95d1-7eb648f24310) and click on Share -> Publish.
+User
+Password fields are masked.
 
-## Can I connect a custom domain to my Lovable project?
+🏠 Dashboard
+Admins see:
 
-Yes, you can!
+Maintenance
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+Transactions
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Reports
+
+Users see:
+
+Transactions
+
+Reports
+
+⚙️ Maintenance (Admin Only)
+✔ Add / Update Books
+✔ Add / Extend / Cancel Memberships
+✔ New / Existing User Management
+
+Each form has:
+
+Required validations
+
+Proper radio/checkbox behavior
+
+Error messages inline
+
+🔄 Transactions
+📘 Book Availability / Search
+At least one field must be filled
+
+Each row has a selectable radio button
+
+📗 Issue Book
+Auto-fill: author, return date (+15 days)
+
+Issue date ≥ today
+
+Validation warnings shown beautifully
+
+📕 Return Book
+Auto-populated issue info
+
+Serial No mandatory
+
+Return date editable (± allowed)
+
+Confirm → leads to Fine Pay (always)
+
+💰 Fine Payment
+Auto-filled details
+
+If fine > 0 → checkbox must be checked
+
+If fine = 0 → direct confirm
+
+📈 Reports Module
+📚 Available Books
+
+📄 Issued Books
+
+🧾 Member List
+
+⏰ Overdue / Due Today
+
+♻ Transaction History
+
+Beautiful data tables with subtle hover animations.
+
+🧩 Core Features (Spec-Compliant)
+Module	Features
+Login	Masked passwords, role selection
+Role Access	Admin = all modules; User = limited
+Maintenance	Book/Movie add/update, membership CRUD, user management
+Transactions	Search, Issue, Return, Fine Pay (full validation)
+UI/UX	Radios, checkboxes, error states, animated transitions
+Data	JSON-based structure for all flows
+
+🛣️ Roadmap
+🚀 Future Enhancements:
+🔗 Backend Integration (Node.js + MySQL)
+
+🔒 Advanced Auth + Permissions
+
+🖼 Book Cover Rendering
+
+📬 Email Notifications (due reminders)
+
+🌐 Multi-Language Support (English + Sanskrit + Local)
+
+📊 Dashboard Analytics
+
+🎥 Movie Media Support (extended catalog)
+
+🤝 Contributing
+We welcome contributions!
+
+Steps:
+bash
+Copy code
+# 1. Fork the project
+# 2. Create branch 
+git checkout -b feature/YourFeature
+
+# 3. Commit changes
+git commit -m "Add some feature"
+
+# 4. Push
+git push origin feature/YourFeature
+
+# 5. Submit Pull Request 🎉
+📄 License
+This project is under the MIT License.
+See the LICENSE file for more details.
+
+❤️ Credits
+Crafted passionately by ObsyanX (Sayan Dutta)
+
+Inspired by modern UI design, animations & the love of books
+
+Built for clean, intuitive, satisfying library interactions
+
+<div align="center">
+🎉 Thank you for exploring Granthikaḥ
+⭐ If you enjoyed this project, please star the repo — it means a lot!
+📖 Happy coding. Happy reading.
+
+</div> ```
