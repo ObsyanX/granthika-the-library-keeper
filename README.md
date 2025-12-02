@@ -63,170 +63,141 @@ Everything feels **light**, **fast**, **alive**, and **book-friendly**.
 - 📁 JSON Mock Data (books, members, transactions)
 
 ---
+## 🚀 Getting Started
 
-# 🚀 **Getting Started**
+Follow these quick steps to set up **Granthikaḥ** locally:
 
+### 🔧 1. Clone the Repository
 ```bash
-# 1. Clone the repository  
-git clone https://github.com/ObsyanX/granthika-the-library-keeper.git  
-cd granthika-the-library-keeper  
-
-# 2. Install dependencies  
-npm install  
-
-# 3. Run the development server  
-npm start  
-
-# 4. Visit in browser  
-http://localhost:3000/
-If you're using a different framework, adapt steps accordingly.
-
-🗂️ Project Structure
-bash
-Copy code
+git clone https://github.com/ObsyanX/granthika-the-library-keeper.git
+cd granthika-the-library-keeper
+```
+```
+npm install
+```
+```
+npm start
+```
+---
+### 🗂️ Project Structure
 /src
-  /components        # Animated UI blocks, reusable elements  
-  /pages             # Login, Dashboard, Maintenance, Reports, Transactions  
-  /data              # JSON files: books, members, transactions  
-  /styles            # CSS / Tailwind / theme utilities  
-  /utils             # Helpers: validation, date checks, role guards  
-  App.js             # Routing + base layout  
-  index.js           # Entry point  
-🎯 How to Use (Flow Overview)
+  /components       # Animated UI blocks, reusable controls  
+  /pages            # Login, Dashboard, Maintenance, Reports, Transactions  
+  /data             # JSON files: books, members, transactions  
+  /styles           # Global CSS / Tailwind themes  
+  /utils            # Validation helpers, date utilities, role guards  
+  App.js            # Routing + base layout  
+  index.js          # Entry point  
+
+### 🎯 How to Use (Flow Overview)
 🔐 Login
-Choose:
-
-Admin
-
-User
-Password fields are masked.
-
+Choose Admin or User
+Passwords are masked for security
 🏠 Dashboard
 Admins see:
-
 Maintenance
-
 Transactions
-
 Reports
-
 Users see:
-
 Transactions
-
 Reports
 
-⚙️ Maintenance (Admin Only)
+### ⚙️ Maintenance (Admin Only)
+
 ✔ Add / Update Books
 ✔ Add / Extend / Cancel Memberships
-✔ New / Existing User Management
+✔ Manage Users (New / Existing)
+Every form includes:
+Required field validations
+Correct radio button & checkbox behavior
+Inline error messages
+### 🔄 Transactions Module
+### 📘 Book Availability / Search
+Must fill at least one field
+Rows include selectable radio button for choosing books
+### 📗 Issue Book
+Auto-fills author
+Auto-fills return date (+15 days)
+Issue date cannot be earlier than today
+Clean inline validation alerts
+### 📕 Return Book
 
-Each form has:
+Auto-fills issue details
+Serial Number is mandatory
+Return date is editable (within allowed constraints)
+Clicking Confirm always leads to Fine Pay
 
-Required validations
+### 💰 Fine Payment
 
-Proper radio/checkbox behavior
+Auto-filled summary
+If fine > 0 → must tick Fine Paid checkbox
+If fine = 0 → straight confirm
+### 📈 Reports Module
+Includes:
+# 📚 Available Books
+# 📄 Issued Books
+# 🧾 Member List
+# ⏰ Overdue / Due Today
 
-Error messages inline
+### ♻ Transaction History
+Designed with clean tables + subtle hover animations.
 
-🔄 Transactions
-📘 Book Availability / Search
-At least one field must be filled
-
-Each row has a selectable radio button
-
-📗 Issue Book
-Auto-fill: author, return date (+15 days)
-
-Issue date ≥ today
-
-Validation warnings shown beautifully
-
-📕 Return Book
-Auto-populated issue info
-
-Serial No mandatory
-
-Return date editable (± allowed)
-
-Confirm → leads to Fine Pay (always)
-
-💰 Fine Payment
-Auto-filled details
-
-If fine > 0 → checkbox must be checked
-
-If fine = 0 → direct confirm
-
-📈 Reports Module
-📚 Available Books
-
-📄 Issued Books
-
-🧾 Member List
-
-⏰ Overdue / Due Today
-
-♻ Transaction History
-
-Beautiful data tables with subtle hover animations.
-
-🧩 Core Features (Spec-Compliant)
+### 🧩 Core Features (Spec Compliant)
 Module	Features
 Login	Masked passwords, role selection
 Role Access	Admin = all modules; User = limited
-Maintenance	Book/Movie add/update, membership CRUD, user management
-Transactions	Search, Issue, Return, Fine Pay (full validation)
-UI/UX	Radios, checkboxes, error states, animated transitions
-Data	JSON-based structure for all flows
+Maintenance	Book/Movie CRUD, membership management, user management
+Transactions	Search, Issue, Return, Fine Pay (with validations)
+UI/UX	Radios, checkboxes, form errors, animations
+Data Handling	JSON-based, supports all workflows
+### 🛣️ Roadmap
+🔮 Future Enhancements
+🔗 Node.js + MySQL Backend
+🔒 Advanced Auth & RBAC
+🖼 Book Cover Previews
+📬 Email Alerts (due reminders)
+🌐 Multi-language UI (Eng + Sanskrit + Local)
+📊 Analytics Dashboard
+🎥 Movie Catalog Enhancements
 
-🛣️ Roadmap
-🚀 Future Enhancements:
-🔗 Backend Integration (Node.js + MySQL)
-
-🔒 Advanced Auth + Permissions
-
-🖼 Book Cover Rendering
-
-📬 Email Notifications (due reminders)
-
-🌐 Multi-Language Support (English + Sanskrit + Local)
-
-📊 Dashboard Analytics
-
-🎥 Movie Media Support (extended catalog)
-
-🤝 Contributing
-We welcome contributions!
-
-Steps:
-bash
-Copy code
+### 🤝 Contributing
+We welcome and appreciate contributions!
+Here’s how you can help:
+```
 # 1. Fork the project
-# 2. Create branch 
+````
+````
+# 2. Create a feature branch
 git checkout -b feature/YourFeature
-
+````
+````
 # 3. Commit changes
 git commit -m "Add some feature"
-
-# 4. Push
+````
+````
+# 4. Push your branch
 git push origin feature/YourFeature
+````
+```
+# 5. Open a Pull Request 🎉
+```
 
-# 5. Submit Pull Request 🎉
-📄 License
-This project is under the MIT License.
-See the LICENSE file for more details.
+### 📄 License
 
-❤️ Credits
-Crafted passionately by ObsyanX (Sayan Dutta)
+This project is licensed under the MIT License.
+See the LICENSE file for full details.
 
-Inspired by modern UI design, animations & the love of books
+### ❤️ Credits
 
-Built for clean, intuitive, satisfying library interactions
+Crafted with passion by ObsyanX (Sayan Dutta)
+Inspired by modern UI/UX principles & seamless micro-animations
+Built to make library management beautiful and intuitive
+
 
 <div align="center">
-🎉 Thank you for exploring Granthikaḥ
-⭐ If you enjoyed this project, please star the repo — it means a lot!
-📖 Happy coding. Happy reading.
+🎉 Thank You for Exploring Granthikaḥ
+⭐ If you like this project, please star the repository!
+📖 Happy Coding. Happy Reading.
+</div> `
 
-</div> ```
+
