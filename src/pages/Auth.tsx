@@ -20,6 +20,8 @@ export default function Auth() {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string }>({});
   const [loading, setLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmailSent, setResetEmailSent] = useState(false);
   
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
@@ -62,11 +64,45 @@ export default function Auth() {
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       newErrors.email = 'Please enter a valid email';
     }
-    if (!password.trim()) newErrors.password = 'Password is required';
-    else if (password.length < 6) newErrors.password = 'Password must be at least 6 characters';
-    if (!isLogin && !name.trim()) newErrors.name = 'Name is required';
+    if (!showForgotPassword) {
+      if (!password.trim()) newErrors.password = 'Password is required';
+      else if (password.length < 6) newErrors.password = 'Password must be at least 6 characters';
+    }
+    if (!isLogin && !showForgotPassword && !name.trim()) newErrors.name = 'Name is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) {
+      setErrors({ email: 'Email is required' });
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setErrors({ email: 'Please enter a valid email' });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth`,
+      });
+      
+      if (error) {
+        toast.error('Failed to send reset email', { description: error.message });
+      } else {
+        setResetEmailSent(true);
+        toast.success('Password reset email sent!', { 
+          description: 'Check your inbox for the reset link' 
+        });
+      }
+    } catch (err: any) {
+      toast.error('An error occurred', { description: err.message });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -238,92 +274,174 @@ export default function Auth() {
             </div>
           )}
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="name" className="text-foreground">Full Name</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <Input
-                    id="name"
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter your name"
-                    className={`pl-10 h-12 rounded-xl ${errors.name ? 'border-destructive' : ''}`}
-                  />
+          {/* Forgot Password View */}
+          {showForgotPassword ? (
+            <div className="space-y-5">
+              {resetEmailSent ? (
+                <div className="text-center py-4">
+                  <div className="w-16 h-16 mx-auto rounded-full bg-accent flex items-center justify-center mb-4">
+                    <Mail className="w-8 h-8 text-primary" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-foreground mb-2">Check your email</h3>
+                  <p className="text-muted-foreground text-sm mb-4">
+                    We've sent a password reset link to <span className="font-medium">{email}</span>
+                  </p>
+                  <Button
+                    onClick={() => {
+                      setShowForgotPassword(false);
+                      setResetEmailSent(false);
+                    }}
+                    variant="outline"
+                    className="w-full h-12 rounded-xl"
+                  >
+                    Back to Sign In
+                  </Button>
                 </div>
-                {errors.name && <p className="text-destructive text-sm">{errors.name}</p>}
-              </div>
-            )}
+              ) : (
+                <form onSubmit={handleForgotPassword} className="space-y-5">
+                  <div className="text-center mb-4">
+                    <h3 className="text-lg font-semibold text-foreground">Forgot Password?</h3>
+                    <p className="text-muted-foreground text-sm">
+                      Enter your email and we'll send you a reset link
+                    </p>
+                  </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-foreground">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  className={`pl-10 h-12 rounded-xl ${errors.email ? 'border-destructive' : ''}`}
-                />
-              </div>
-              {errors.email && <p className="text-destructive text-sm">{errors.email}</p>}
+                  <div className="space-y-2">
+                    <Label htmlFor="reset-email" className="text-foreground">Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                      <Input
+                        id="reset-email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Enter your email"
+                        className={`pl-10 h-12 rounded-xl ${errors.email ? 'border-destructive' : ''}`}
+                      />
+                    </div>
+                    {errors.email && <p className="text-destructive text-sm">{errors.email}</p>}
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full h-12 rounded-xl font-semibold gradient-primary text-primary-foreground"
+                  >
+                    {loading ? 'Sending...' : 'Send Reset Link'}
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setShowForgotPassword(false)}
+                    className="w-full"
+                  >
+                    Back to Sign In
+                  </Button>
+                </form>
+              )}
             </div>
+          ) : (
+            <>
+              {/* Form */}
+              <form onSubmit={handleSubmit} className="space-y-5">
+                {!isLogin && (
+                  <div className="space-y-2">
+                    <Label htmlFor="name" className="text-foreground">Full Name</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                      <Input
+                        id="name"
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Enter your name"
+                        className={`pl-10 h-12 rounded-xl ${errors.name ? 'border-destructive' : ''}`}
+                      />
+                    </div>
+                    {errors.name && <p className="text-destructive text-sm">{errors.name}</p>}
+                  </div>
+                )}
 
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-foreground">Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  className={`pl-10 pr-10 h-12 rounded-xl ${errors.password ? 'border-destructive' : ''}`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-foreground">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Enter your email"
+                      className={`pl-10 h-12 rounded-xl ${errors.email ? 'border-destructive' : ''}`}
+                    />
+                  </div>
+                  {errors.email && <p className="text-destructive text-sm">{errors.email}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password" className="text-foreground">Password</Label>
+                    {isLogin && (
+                      <button
+                        type="button"
+                        onClick={() => setShowForgotPassword(true)}
+                        className="text-sm text-primary hover:underline"
+                      >
+                        Forgot password?
+                      </button>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter your password"
+                      className={`pl-10 pr-10 h-12 rounded-xl ${errors.password ? 'border-destructive' : ''}`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                  {errors.password && <p className="text-destructive text-sm">{errors.password}</p>}
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className={`w-full h-12 rounded-xl font-semibold text-base hover:opacity-90 transition-opacity disabled:opacity-50 ${
+                    userType === 'admin' 
+                      ? 'bg-primary text-primary-foreground' 
+                      : 'gradient-primary text-primary-foreground'
+                  }`}
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
+                  {loading ? 'Please wait...' : isLogin 
+                    ? (userType === 'admin' ? 'Admin Sign In' : 'Sign In') 
+                    : (userType === 'admin' ? 'Create Admin Account' : 'Create Account')}
+                </Button>
+              </form>
+
+              {/* Info */}
+              <div className="mt-6 p-3 rounded-xl bg-accent/50 text-sm text-center">
+                <p className="text-muted-foreground">
+                  {isLogin ? "Don't have an account? " : "Already have an account? "}
+                  <button
+                    onClick={() => setIsLogin(!isLogin)}
+                    className="text-primary hover:underline font-medium"
+                  >
+                    {isLogin ? 'Sign up' : 'Sign in'}
+                  </button>
+                </p>
               </div>
-              {errors.password && <p className="text-destructive text-sm">{errors.password}</p>}
-            </div>
-
-            <Button
-              type="submit"
-              disabled={loading}
-              className={`w-full h-12 rounded-xl font-semibold text-base hover:opacity-90 transition-opacity disabled:opacity-50 ${
-                userType === 'admin' 
-                  ? 'bg-primary text-primary-foreground' 
-                  : 'gradient-primary text-primary-foreground'
-              }`}
-            >
-              {loading ? 'Please wait...' : isLogin 
-                ? (userType === 'admin' ? 'Admin Sign In' : 'Sign In') 
-                : (userType === 'admin' ? 'Create Admin Account' : 'Create Account')}
-            </Button>
-          </form>
-
-          {/* Info */}
-          <div className="mt-6 p-3 rounded-xl bg-accent/50 text-sm text-center">
-            <p className="text-muted-foreground">
-              {isLogin ? "Don't have an account? " : "Already have an account? "}
-              <button
-                onClick={() => setIsLogin(!isLogin)}
-                className="text-primary hover:underline font-medium"
-              >
-                {isLogin ? 'Sign up' : 'Sign in'}
-              </button>
-            </p>
-          </div>
+            </>
+          )}
         </div>
       </div>
     </div>
