@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import AdminHome from "./pages/AdminHome";
@@ -34,25 +36,25 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<Auth />} />
+              <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/admin" element={<AdminHome />} />
-              <Route path="/user" element={<UserHome />} />
-              <Route path="/books" element={<Books />} />
-              <Route path="/books/add" element={<AddBook />} />
-              <Route path="/books/edit/:serialNo" element={<AddBook />} />
-              <Route path="/transactions" element={<Transactions />} />
-              <Route path="/transactions/search" element={<BookAvailable />} />
-              <Route path="/transactions/issue" element={<IssueBook />} />
-              <Route path="/transactions/return" element={<ReturnBook />} />
-              <Route path="/transactions/fine" element={<PayFine />} />
-              <Route path="/membership" element={<Membership />} />
-              <Route path="/membership/add" element={<AddMembership />} />
-              <Route path="/membership/update" element={<UpdateMembership />} />
-              <Route path="/membership/edit/:membershipNo" element={<AddMembership />} />
-              <Route path="/reports" element={<Reports />} />
-              <Route path="/users" element={<UserManagement />} />
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminHome /></ProtectedRoute>} />
+              <Route path="/user" element={<ProtectedRoute><UserHome /></ProtectedRoute>} />
+              <Route path="/books" element={<ProtectedRoute><Books /></ProtectedRoute>} />
+              <Route path="/books/add" element={<ProtectedRoute requireAdmin><AddBook /></ProtectedRoute>} />
+              <Route path="/books/edit/:serialNo" element={<ProtectedRoute requireAdmin><AddBook /></ProtectedRoute>} />
+              <Route path="/transactions" element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
+              <Route path="/transactions/search" element={<ProtectedRoute><BookAvailable /></ProtectedRoute>} />
+              <Route path="/transactions/issue" element={<ProtectedRoute><IssueBook /></ProtectedRoute>} />
+              <Route path="/transactions/return" element={<ProtectedRoute><ReturnBook /></ProtectedRoute>} />
+              <Route path="/transactions/fine" element={<ProtectedRoute requireAdmin><PayFine /></ProtectedRoute>} />
+              <Route path="/membership" element={<ProtectedRoute requireAdmin><Membership /></ProtectedRoute>} />
+              <Route path="/membership/add" element={<ProtectedRoute requireAdmin><AddMembership /></ProtectedRoute>} />
+              <Route path="/membership/update" element={<ProtectedRoute requireAdmin><UpdateMembership /></ProtectedRoute>} />
+              <Route path="/membership/edit/:membershipNo" element={<ProtectedRoute requireAdmin><AddMembership /></ProtectedRoute>} />
+              <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+              <Route path="/users" element={<ProtectedRoute requireAdmin><UserManagement /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
