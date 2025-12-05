@@ -23,6 +23,7 @@ import UpdateMembership from "./pages/UpdateMembership";
 import BookAvailable from "./pages/BookAvailable";
 import Reports from "./pages/Reports";
 import UserManagement from "./pages/UserManagement";
+import AdminSettings from "./pages/AdminSettings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,13 +49,14 @@ const App = () => (
               <Route path="/transactions/search" element={<ProtectedRoute><BookAvailable /></ProtectedRoute>} />
               <Route path="/transactions/issue" element={<ProtectedRoute><IssueBook /></ProtectedRoute>} />
               <Route path="/transactions/return" element={<ProtectedRoute><ReturnBook /></ProtectedRoute>} />
-              <Route path="/transactions/fine" element={<ProtectedRoute requireAdmin><PayFine /></ProtectedRoute>} />
+              <Route path="/transactions/fine" element={<ProtectedRoute><PayFine /></ProtectedRoute>} />
               <Route path="/membership" element={<ProtectedRoute requireAdmin><Membership /></ProtectedRoute>} />
               <Route path="/membership/add" element={<ProtectedRoute requireAdmin><AddMembership /></ProtectedRoute>} />
               <Route path="/membership/update" element={<ProtectedRoute requireAdmin><UpdateMembership /></ProtectedRoute>} />
               <Route path="/membership/edit/:membershipNo" element={<ProtectedRoute requireAdmin><AddMembership /></ProtectedRoute>} />
               <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
               <Route path="/users" element={<ProtectedRoute requireAdmin><UserManagement /></ProtectedRoute>} />
+              <Route path="/admin/settings" element={<ProtectedRoute requireAdmin><AdminSettings /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

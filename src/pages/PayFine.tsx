@@ -10,14 +10,20 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useBooks } from '@/hooks/useBooks';
+import { useAuth } from '@/contexts/AuthContext';
+import { useSettings } from '@/hooks/useSettings';
+import { supabase } from '@/integrations/supabase/client';
+import { Member } from '@/hooks/useMembers';
 
 export default function PayFine() {
   const navigate = useNavigate();
   const location = useLocation();
   const transactionId = (location.state as any)?.transactionId;
   
-  const { transactions, overdueTransactions, updateTransaction } = useTransactions();
+  const { transactions, updateTransaction } = useTransactions();
   const { updateBook, books } = useBooks();
+  const { user, isAdmin } = useAuth();
+  const { getDailyFineRate } = useSettings();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTransaction, setSelectedTransaction] = useState<string | null>(transactionId || null);
@@ -25,27 +31,56 @@ export default function PayFine() {
   const [remarks, setRemarks] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [userMember, setUserMember] = useState<Member | null>(null);
+
+  const dailyFineRate = getDailyFineRate();
+
+  // Fetch user's membership for non-admins
+  useEffect(() => {
+    const fetchUserMember = async () => {
+      if (!isAdmin && user?.id) {
+        const { data } = await supabase
+          .from('members')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (data) {
+          setUserMember(data as Member);
+        }
+      }
+    };
+    fetchUserMember();
+  }, [user, isAdmin]);
 
   // Find selected transaction
   const transaction = selectedTransaction 
     ? transactions.find(t => t.id === selectedTransaction)
     : null;
 
-  // Filter transactions with fines
-  const transactionsWithFines = transactions.filter(t => 
-    (t.status === 'overdue' || (t.fine && t.fine > 0 && !t.fine_paid)) &&
-    (searchTerm === '' || 
+  // Filter transactions with fines based on role
+  const transactionsWithFines = transactions.filter(t => {
+    const hasFine = (t.status === 'overdue' || (t.fine && t.fine > 0 && !t.fine_paid));
+    const matchesSearch = searchTerm === '' || 
       t.book?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       t.member?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      t.book?.serial_no?.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+      t.book?.serial_no?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // For regular users, only show their own fines
+    if (!isAdmin && userMember) {
+      return hasFine && matchesSearch && t.member_id === userMember.id;
+    }
+    
+    // For admins, show all fines
+    return hasFine && matchesSearch;
+  });
 
-  // Calculate fine (₹10 per day overdue)
+  // Calculate fine using the admin-set rate
   const calculateFine = (dueDate: string) => {
     const due = new Date(dueDate);
     const today = new Date();
     const daysOverdue = Math.max(0, Math.floor((today.getTime() - due.getTime()) / (1000 * 60 * 60 * 24)));
-    return daysOverdue * 10;
+    return daysOverdue * dailyFineRate;
   };
 
   const fine = transaction?.fine || (transaction ? calculateFine(transaction.due_date) : 0);
@@ -68,9 +103,9 @@ export default function PayFine() {
       });
 
       toast.success('Fine payment recorded!', {
-        description: `Fine of ₹${fine} has been paid by ${transaction.member?.name}`,
+        description: `Fine of ₹${fine} has been paid`,
       });
-      navigate('/transactions');
+      navigate(isAdmin ? '/transactions' : '/reports');
     } catch (err: any) {
       toast.error('Failed to process payment', { description: err.message });
     } finally {
@@ -78,21 +113,46 @@ export default function PayFine() {
     }
   };
 
+  // Show message if user has no membership
+  if (!isAdmin && !userMember) {
+    return (
+      <DashboardLayout>
+        <div className="max-w-2xl mx-auto animate-fade-in">
+          <Button variant="ghost" onClick={() => navigate('/reports')} className="mb-6">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Reports
+          </Button>
+
+          <div className="neu-card bg-card rounded-2xl p-8 text-center">
+            <CreditCard className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+            <h2 className="font-display text-xl font-semibold text-foreground mb-2">No Membership Found</h2>
+            <p className="text-muted-foreground mb-6">You need a membership to view and pay fines.</p>
+            <Button onClick={() => navigate('/reports')} className="gradient-primary text-primary-foreground rounded-xl">
+              Back to Reports
+            </Button>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   if (transactionsWithFines.length === 0 && !selectedTransaction) {
     return (
       <DashboardLayout>
         <div className="max-w-2xl mx-auto animate-fade-in">
-          <Button variant="ghost" onClick={() => navigate('/transactions')} className="mb-6">
+          <Button variant="ghost" onClick={() => navigate(isAdmin ? '/transactions' : '/reports')} className="mb-6">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Transactions
+            {isAdmin ? 'Back to Transactions' : 'Back to Reports'}
           </Button>
 
           <div className="neu-card bg-card rounded-2xl p-8 text-center">
             <CheckCircle className="w-16 h-16 mx-auto text-accent-foreground mb-4" />
             <h2 className="font-display text-xl font-semibold text-foreground mb-2">No Fines Pending</h2>
-            <p className="text-muted-foreground mb-6">There are no pending fines at this time.</p>
-            <Button onClick={() => navigate('/transactions')} className="gradient-primary text-primary-foreground rounded-xl">
-              Back to Transactions
+            <p className="text-muted-foreground mb-6">
+              {isAdmin ? 'There are no pending fines at this time.' : 'You have no pending fines. Great job!'}
+            </p>
+            <Button onClick={() => navigate(isAdmin ? '/transactions' : '/reports')} className="gradient-primary text-primary-foreground rounded-xl">
+              {isAdmin ? 'Back to Transactions' : 'Back to Reports'}
             </Button>
           </div>
         </div>
@@ -103,9 +163,9 @@ export default function PayFine() {
   return (
     <DashboardLayout>
       <div className="max-w-2xl mx-auto animate-fade-in">
-        <Button variant="ghost" onClick={() => navigate('/transactions')} className="mb-6">
+        <Button variant="ghost" onClick={() => navigate(isAdmin ? '/transactions' : '/reports')} className="mb-6">
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Transactions
+          {isAdmin ? 'Back to Transactions' : 'Back to Reports'}
         </Button>
 
         <div className="neu-card bg-card rounded-2xl p-8">
@@ -115,26 +175,30 @@ export default function PayFine() {
             </div>
             <div>
               <h1 className="font-display text-2xl font-bold text-foreground">Pay Fine</h1>
-              <p className="text-muted-foreground">Record fine payment</p>
+              <p className="text-muted-foreground">
+                {isAdmin ? 'Record fine payment' : 'Pay your pending fines'}
+              </p>
             </div>
           </div>
 
           {/* Search / Select Transaction */}
           {!selectedTransaction && (
             <div className="space-y-4 mb-6">
-              <div className="space-y-2">
-                <Label className="text-foreground">Search Transactions with Fines</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <Input
-                    type="text"
-                    placeholder="Search by book, member, or serial number..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 h-12 rounded-xl"
-                  />
+              {isAdmin && (
+                <div className="space-y-2">
+                  <Label className="text-foreground">Search Transactions with Fines</Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Input
+                      type="text"
+                      placeholder="Search by book, member, or serial number..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 h-12 rounded-xl"
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="max-h-64 overflow-y-auto space-y-2 rounded-xl border border-border p-2">
                 {transactionsWithFines.map((t) => {
@@ -157,7 +221,7 @@ export default function PayFine() {
                       <div className="flex-1">
                         <p className="font-medium text-foreground">{t.book?.title}</p>
                         <p className="text-sm text-muted-foreground">
-                          {t.member?.name} • Due: {t.due_date}
+                          {isAdmin && `${t.member?.name} • `}Due: {t.due_date}
                         </p>
                       </div>
                       <span className="bg-destructive/10 text-destructive px-2 py-1 rounded text-sm font-medium">
@@ -185,15 +249,19 @@ export default function PayFine() {
                   <Input value={transaction.book?.serial_no || ''} disabled className="h-12 rounded-xl bg-muted" />
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-foreground">Member</Label>
-                  <Input value={transaction.member?.name || ''} disabled className="h-12 rounded-xl bg-muted" />
-                </div>
+                {isAdmin && (
+                  <>
+                    <div className="space-y-2">
+                      <Label className="text-foreground">Member</Label>
+                      <Input value={transaction.member?.name || ''} disabled className="h-12 rounded-xl bg-muted" />
+                    </div>
 
-                <div className="space-y-2">
-                  <Label className="text-foreground">Membership No</Label>
-                  <Input value={transaction.member?.membership_no || ''} disabled className="h-12 rounded-xl bg-muted" />
-                </div>
+                    <div className="space-y-2">
+                      <Label className="text-foreground">Membership No</Label>
+                      <Input value={transaction.member?.membership_no || ''} disabled className="h-12 rounded-xl bg-muted" />
+                    </div>
+                  </>
+                )}
 
                 <div className="space-y-2">
                   <Label className="text-foreground">Issue Date</Label>
@@ -216,7 +284,7 @@ export default function PayFine() {
                     </p>
                   </div>
                   {fine > 0 && (
-                    <p className="text-sm text-muted-foreground">₹10 per day overdue</p>
+                    <p className="text-sm text-muted-foreground">₹{dailyFineRate} per day overdue</p>
                   )}
                 </div>
               </div>
@@ -234,7 +302,10 @@ export default function PayFine() {
                       }}
                     />
                     <Label htmlFor="finePaid" className="text-foreground cursor-pointer">
-                      I confirm that the fine of ₹{fine} has been paid
+                      {isAdmin 
+                        ? `I confirm that the fine of ₹${fine} has been paid`
+                        : `I confirm payment of ₹${fine}`
+                      }
                     </Label>
                   </div>
                   {error && <p className="text-destructive text-sm">{error}</p>}
@@ -258,7 +329,7 @@ export default function PayFine() {
                 <Button 
                   type="button" 
                   variant="outline" 
-                  onClick={() => selectedTransaction ? setSelectedTransaction(null) : navigate('/transactions')} 
+                  onClick={() => selectedTransaction ? setSelectedTransaction(null) : navigate(isAdmin ? '/transactions' : '/reports')} 
                   className="flex-1 h-12 rounded-xl"
                 >
                   {selectedTransaction && !transactionId ? 'Back' : 'Cancel'}
@@ -269,7 +340,7 @@ export default function PayFine() {
                   className="flex-1 h-12 rounded-xl gradient-primary text-primary-foreground"
                 >
                   {submitting && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                  Confirm Payment
+                  {isAdmin ? 'Confirm Payment' : 'Pay Fine'}
                 </Button>
               </div>
             </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { BookOpen, Users, AlertTriangle, CheckCircle, Download, Printer, Clock, Film, FileText, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { BookOpen, Users, AlertTriangle, CheckCircle, Download, Printer, Clock, Film, FileText, User, History, CreditCard } from 'lucide-react';
 import { format } from 'date-fns';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -10,9 +11,10 @@ import { useTransactions } from '@/hooks/useTransactions';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
-type ReportType = 'available' | 'movies' | 'issued' | 'members' | 'overdue' | 'duetoday' | 'pending' | 'myaccount';
+type ReportType = 'available' | 'movies' | 'issued' | 'members' | 'overdue' | 'duetoday' | 'pending' | 'myaccount' | 'history';
 
 export default function Reports() {
+  const navigate = useNavigate();
   const [activeReport, setActiveReport] = useState<ReportType>('available');
   const { books } = useBooks();
   const { members } = useMembers();
@@ -65,11 +67,17 @@ export default function Reports() {
   const userReportTabs = [
     { id: 'myaccount' as const, label: 'My Account', icon: User },
     { id: 'issued' as const, label: 'My Borrowed Items', icon: CheckCircle },
+    { id: 'history' as const, label: 'My History', icon: History },
     { id: 'overdue' as const, label: 'My Overdue', icon: AlertTriangle },
     { id: 'duetoday' as const, label: 'Due Today', icon: Clock },
     { id: 'available' as const, label: 'Available Books', icon: BookOpen },
     { id: 'movies' as const, label: 'Available Movies', icon: Film },
   ];
+
+  // Get returned transactions for history
+  const returnedTransactions = isAdmin
+    ? transactions.filter(t => t.status === 'returned')
+    : transactions.filter(t => t.status === 'returned' && t.member_id === userMember?.id);
 
   const reportTabs = isAdmin ? adminReportTabs : userReportTabs;
 
@@ -180,9 +188,19 @@ export default function Reports() {
                     <div className="p-4 rounded-xl bg-muted/50">
                       <p className="text-sm text-muted-foreground">Pending Fine</p>
                       {userPendingFine > 0 ? (
-                        <span className="inline-block bg-destructive/10 text-destructive px-3 py-1 rounded text-lg font-semibold">
-                          ₹{userPendingFine}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="inline-block bg-destructive/10 text-destructive px-3 py-1 rounded text-lg font-semibold">
+                            ₹{userPendingFine}
+                          </span>
+                          <Button 
+                            size="sm" 
+                            onClick={() => navigate('/transactions/fine')}
+                            className="gradient-primary text-primary-foreground"
+                          >
+                            <CreditCard className="w-4 h-4 mr-1" />
+                            Pay Fine
+                          </Button>
+                        </div>
                       ) : (
                         <p className="text-lg font-semibold text-accent-foreground">No dues</p>
                       )}
@@ -471,6 +489,51 @@ export default function Reports() {
                 <FileText className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
                 No pending issue requests
               </div>
+            </div>
+          )}
+
+          {/* Transaction History (User) */}
+          {activeReport === 'history' && !isAdmin && (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Serial No</th>
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Title</th>
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Issue Date</th>
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Return Date</th>
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Fine Paid</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {returnedTransactions.length > 0 ? returnedTransactions.map((t) => (
+                    <tr key={t.id} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
+                      <td className="py-4 px-6 font-mono text-foreground">{t.book?.serial_no}</td>
+                      <td className="py-4 px-6 font-medium text-foreground">{t.book?.title}</td>
+                      <td className="py-4 px-6 text-muted-foreground">{t.issue_date}</td>
+                      <td className="py-4 px-6 text-muted-foreground">{t.return_date || '-'}</td>
+                      <td className="py-4 px-6">
+                        {t.fine && t.fine > 0 ? (
+                          <span className={`px-2 py-1 rounded text-sm font-medium ${
+                            t.fine_paid ? 'bg-accent text-accent-foreground' : 'bg-destructive/10 text-destructive'
+                          }`}>
+                            ₹{t.fine} {t.fine_paid ? '(Paid)' : '(Unpaid)'}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan={5} className="py-12 text-center text-muted-foreground">
+                        <History className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
+                        No transaction history found
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           )}
         </div>

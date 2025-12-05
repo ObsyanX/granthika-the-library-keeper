@@ -27,8 +27,7 @@ function TransactionCard({ icon: Icon, title, description, onClick }: Transactio
 
 export default function Transactions() {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const isAdmin = user?.role === 'admin';
+  const { isAdmin } = useAuth();
 
   return (
     <DashboardLayout>
@@ -54,7 +53,7 @@ export default function Transactions() {
           {isAdmin && (
             <TransactionCard
               icon={CreditCard}
-              title="Pay Fine"
+              title="Record Fine Payment"
               description="Process and record fine payments from members"
               onClick={() => navigate('/transactions/fine')}
             />
