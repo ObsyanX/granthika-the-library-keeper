@@ -1,18 +1,35 @@
-import { useState } from 'react';
-import { ArrowLeft, UserPlus, Users } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ArrowLeft, UserPlus, Users, Loader2, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 type UserType = 'new' | 'existing';
+
+interface SystemUser {
+  id: string;
+  email: string;
+  name: string;
+  role: 'admin' | 'moderator' | 'user';
+  created_at: string;
+}
 
 export default function UserManagement() {
   const navigate = useNavigate();
   const [userType, setUserType] = useState<UserType>('new');
+  const [users, setUsers] = useState<SystemUser[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedUser, setSelectedUser] = useState<SystemUser | null>(null);
+  
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -20,6 +37,28 @@ export default function UserManagement() {
     role: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (userType === 'existing') {
+      fetchUsers();
+    }
+  }, [userType]);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('manage-users', {
+        body: { action: 'list-users' }
+      });
+      
+      if (error) throw error;
+      setUsers(data.users || []);
+    } catch (error: any) {
+      toast.error('Failed to load users', { description: error.message });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -39,20 +78,75 @@ export default function UserManagement() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
 
-    toast.success(`User ${userType === 'new' ? 'created' : 'updated'} successfully!`, {
-      description: `${formData.name} has been ${userType === 'new' ? 'added' : 'updated'}`,
+    setSubmitting(true);
+    try {
+      if (userType === 'new') {
+        const { data, error } = await supabase.functions.invoke('manage-users', {
+          body: { 
+            action: 'create-user',
+            email: formData.email,
+            password: formData.password,
+            name: formData.name,
+            role: formData.role
+          }
+        });
+
+        if (error) throw error;
+        if (data.error) throw new Error(data.error);
+
+        toast.success('User created successfully!', {
+          description: `${formData.name} has been added as ${formData.role}`,
+        });
+      } else if (selectedUser) {
+        const { data, error } = await supabase.functions.invoke('manage-users', {
+          body: { 
+            action: 'update-role',
+            userId: selectedUser.id,
+            role: formData.role
+          }
+        });
+
+        if (error) throw error;
+        if (data.error) throw new Error(data.error);
+
+        toast.success('User updated successfully!', {
+          description: `${selectedUser.name || selectedUser.email}'s role has been updated to ${formData.role}`,
+        });
+        fetchUsers();
+      }
+      
+      setFormData({ name: '', email: '', password: '', role: '' });
+      setSelectedUser(null);
+    } catch (error: any) {
+      toast.error('Operation failed', { description: error.message });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const filteredUsers = users.filter(user =>
+    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (user.name && user.name.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  const handleSelectUser = (user: SystemUser) => {
+    setSelectedUser(user);
+    setFormData({
+      name: user.name || '',
+      email: user.email,
+      password: '',
+      role: user.role,
     });
-    setFormData({ name: '', email: '', password: '', role: '' });
   };
 
   return (
     <DashboardLayout>
-      <div className="max-w-2xl mx-auto animate-fade-in">
-        <Button variant="ghost" onClick={() => navigate('/dashboard')} className="mb-6">
+      <div className="max-w-4xl mx-auto animate-fade-in">
+        <Button variant="ghost" onClick={() => navigate('/admin')} className="mb-6">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Dashboard
         </Button>
@@ -64,7 +158,7 @@ export default function UserManagement() {
             </div>
             <div>
               <h1 className="font-display text-2xl font-bold text-foreground">User Management</h1>
-              <p className="text-muted-foreground">Add or update system users</p>
+              <p className="text-muted-foreground">Add or update system users and roles</p>
             </div>
           </div>
 
@@ -72,7 +166,11 @@ export default function UserManagement() {
           <div className="flex rounded-xl p-1 bg-muted mb-8">
             <button
               type="button"
-              onClick={() => setUserType('new')}
+              onClick={() => {
+                setUserType('new');
+                setSelectedUser(null);
+                setFormData({ name: '', email: '', password: '', role: '' });
+              }}
               className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${
                 userType === 'new'
                   ? 'bg-card text-foreground shadow-sm'
@@ -92,10 +190,82 @@ export default function UserManagement() {
               }`}
             >
               <Users className="w-4 h-4" />
-              Existing User
+              Existing Users
             </button>
           </div>
 
+          {/* Existing Users List */}
+          {userType === 'existing' && (
+            <div className="mb-8">
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search users..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 h-10 rounded-xl"
+                />
+              </div>
+
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                </div>
+              ) : (
+                <div className="border border-border rounded-xl overflow-hidden max-h-64 overflow-y-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Role</TableHead>
+                        <TableHead></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredUsers.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center text-muted-foreground py-4">
+                            No users found
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredUsers.map((user) => (
+                          <TableRow 
+                            key={user.id} 
+                            className={`cursor-pointer ${selectedUser?.id === user.id ? 'bg-primary/10' : ''}`}
+                            onClick={() => handleSelectUser(user)}
+                          >
+                            <TableCell className="font-medium">{user.name || '-'}</TableCell>
+                            <TableCell>{user.email}</TableCell>
+                            <TableCell>
+                              <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                                {user.role}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSelectUser(user);
+                                }}
+                              >
+                                Edit
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="name" className="text-foreground">Full Name *</Label>
@@ -104,6 +274,7 @@ export default function UserManagement() {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="Enter user's full name"
+                disabled={userType === 'existing' && !selectedUser}
                 className={`h-12 rounded-xl ${errors.name ? 'border-destructive' : ''}`}
               />
               {errors.name && <p className="text-destructive text-sm">{errors.name}</p>}
@@ -139,9 +310,24 @@ export default function UserManagement() {
               </>
             )}
 
+            {userType === 'existing' && selectedUser && (
+              <div className="space-y-2">
+                <Label className="text-foreground">Email Address</Label>
+                <Input
+                  value={selectedUser.email}
+                  disabled
+                  className="h-12 rounded-xl bg-muted"
+                />
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label className="text-foreground">Role *</Label>
-              <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value })}>
+              <Select 
+                value={formData.role} 
+                onValueChange={(value) => setFormData({ ...formData, role: value })}
+                disabled={userType === 'existing' && !selectedUser}
+              >
                 <SelectTrigger className={`h-12 rounded-xl ${errors.role ? 'border-destructive' : ''}`}>
                   <SelectValue placeholder="Select role" />
                 </SelectTrigger>
@@ -154,11 +340,21 @@ export default function UserManagement() {
             </div>
 
             <div className="flex gap-4 pt-4">
-              <Button type="button" variant="outline" onClick={() => navigate('/dashboard')} className="flex-1 h-12 rounded-xl">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => navigate('/admin')} 
+                className="flex-1 h-12 rounded-xl"
+              >
                 Cancel
               </Button>
-              <Button type="submit" className="flex-1 h-12 rounded-xl gradient-primary text-primary-foreground">
-                {userType === 'new' ? 'Create User' : 'Update User'}
+              <Button 
+                type="submit" 
+                disabled={submitting || (userType === 'existing' && !selectedUser)}
+                className="flex-1 h-12 rounded-xl gradient-primary text-primary-foreground"
+              >
+                {submitting && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                {userType === 'new' ? 'Create User' : 'Update Role'}
               </Button>
             </div>
           </form>
