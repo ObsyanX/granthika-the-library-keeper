@@ -12,6 +12,8 @@ export interface Book {
   copies: number;
   available_copies: number;
   cover_url?: string | null;
+  cost?: number | null;
+  procurement_date?: string | null;
   created_at: string;
   updated_at: string;
 }

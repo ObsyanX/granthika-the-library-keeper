@@ -5,7 +5,13 @@ export interface Member {
   id: string;
   membership_no: string;
   name: string;
+  first_name?: string | null;
+  last_name?: string | null;
   email: string;
+  contact_number?: string | null;
+  contact_address?: string | null;
+  aadhar_card?: string | null;
+  user_id?: string | null;
   start_date: string;
   duration: '6months' | '1year' | '2years';
   end_date: string;
@@ -18,7 +24,13 @@ type MemberRow = {
   id: string;
   membership_no: string;
   name: string;
+  first_name: string | null;
+  last_name: string | null;
   email: string;
+  contact_number: string | null;
+  contact_address: string | null;
+  aadhar_card: string | null;
+  user_id: string | null;
   start_date: string;
   duration: string;
   end_date: string;

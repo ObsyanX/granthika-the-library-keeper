@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, BookOpen, Loader2 } from 'lucide-react';
 import { format, addDays } from 'date-fns';
@@ -10,19 +10,25 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useBooks } from '@/hooks/useBooks';
-import { useMembers } from '@/hooks/useMembers';
+import { useMembers, Member } from '@/hooks/useMembers';
 import { useTransactions } from '@/hooks/useTransactions';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function IssueBook() {
   const navigate = useNavigate();
   const { books, availableBooks, updateBook } = useBooks();
   const { activeMembers, loading: membersLoading } = useMembers();
   const { createTransaction } = useTransactions();
+  const { user, isAdmin } = useAuth();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBook, setSelectedBook] = useState<string | null>(null);
   const [searchError, setSearchError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [userMember, setUserMember] = useState<Member | null>(null);
+  const [loadingMember, setLoadingMember] = useState(true);
+  
   const [formData, setFormData] = useState({
     memberId: '',
     issueDate: format(new Date(), 'yyyy-MM-dd'),
@@ -30,6 +36,29 @@ export default function IssueBook() {
     remarks: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // For regular users, auto-fetch their linked member
+  useEffect(() => {
+    const fetchUserMember = async () => {
+      if (!isAdmin && user?.id) {
+        setLoadingMember(true);
+        const { data } = await supabase
+          .from('members')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (data) {
+          setUserMember(data as Member);
+          setFormData(prev => ({ ...prev, memberId: data.id }));
+        }
+        setLoadingMember(false);
+      } else {
+        setLoadingMember(false);
+      }
+    };
+    fetchUserMember();
+  }, [user, isAdmin]);
 
   const filteredBooks = availableBooks.filter(book => 
     book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -95,6 +124,30 @@ export default function IssueBook() {
       setSubmitting(false);
     }
   };
+
+  // Show error if user has no membership
+  if (!isAdmin && !loadingMember && !userMember) {
+    return (
+      <DashboardLayout>
+        <div className="max-w-2xl mx-auto animate-fade-in">
+          <Button variant="ghost" onClick={() => navigate('/user')} className="mb-6">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Home
+          </Button>
+          <div className="neu-card bg-card rounded-2xl p-8 text-center">
+            <BookOpen className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+            <h2 className="font-display text-xl font-semibold text-foreground mb-2">No Membership Found</h2>
+            <p className="text-muted-foreground mb-6">
+              Your account is not linked to a library membership. Please contact the librarian to register.
+            </p>
+            <Button onClick={() => navigate('/user')} className="gradient-primary text-primary-foreground rounded-xl">
+              Back to Home
+            </Button>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -181,24 +234,32 @@ export default function IssueBook() {
 
                 <div className="space-y-2">
                   <Label className="text-foreground">Member *</Label>
-                  <Select value={formData.memberId} onValueChange={(value) => setFormData({ ...formData, memberId: value })}>
-                    <SelectTrigger className={`h-12 rounded-xl ${errors.memberId ? 'border-destructive' : ''}`}>
-                      <SelectValue placeholder="Select member" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {membersLoading ? (
-                        <div className="p-2 text-center text-muted-foreground">Loading...</div>
-                      ) : activeMembers.length === 0 ? (
-                        <div className="p-2 text-center text-muted-foreground">No active members</div>
-                      ) : (
-                        activeMembers.map((member) => (
-                          <SelectItem key={member.id} value={member.id}>
-                            {member.name} ({member.membership_no})
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
+                  {isAdmin ? (
+                    <Select value={formData.memberId} onValueChange={(value) => setFormData({ ...formData, memberId: value })}>
+                      <SelectTrigger className={`h-12 rounded-xl ${errors.memberId ? 'border-destructive' : ''}`}>
+                        <SelectValue placeholder="Select member" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {membersLoading ? (
+                          <div className="p-2 text-center text-muted-foreground">Loading...</div>
+                        ) : activeMembers.length === 0 ? (
+                          <div className="p-2 text-center text-muted-foreground">No active members</div>
+                        ) : (
+                          activeMembers.map((member) => (
+                            <SelectItem key={member.id} value={member.id}>
+                              {member.name} ({member.membership_no})
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input 
+                      value={userMember ? `${userMember.name} (${userMember.membership_no})` : 'Loading...'} 
+                      disabled 
+                      className="h-12 rounded-xl bg-muted" 
+                    />
+                  )}
                   {errors.memberId && <p className="text-destructive text-sm">{errors.memberId}</p>}
                 </div>
 
