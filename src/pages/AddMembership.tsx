@@ -1,14 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Search } from 'lucide-react';
 import { format, addMonths, addYears } from 'date-fns';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useMembers } from '@/hooks/useMembers';
+import { supabase } from '@/integrations/supabase/client';
 
 type Duration = '6months' | '1year' | '2years';
 
@@ -29,9 +31,19 @@ function calculateEndDate(startDate: string, duration: Duration): string {
   }
 }
 
+interface AuthUser {
+  id: string;
+  email: string;
+  name?: string;
+}
+
 export default function AddMembership() {
   const navigate = useNavigate();
   const { addMember } = useMembers();
+  
+  const [authUsers, setAuthUsers] = useState<AuthUser[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string>('');
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -45,6 +57,43 @@ export default function AddMembership() {
   const [duration, setDuration] = useState<Duration>('6months');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+
+  // Fetch auth users to link membership
+  useEffect(() => {
+    const fetchAuthUsers = async () => {
+      setLoadingUsers(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('manage-users', {
+          body: { action: 'list-users' }
+        });
+        if (!error && data.users) {
+          setAuthUsers(data.users);
+        }
+      } catch (err) {
+        console.error('Failed to fetch users:', err);
+      } finally {
+        setLoadingUsers(false);
+      }
+    };
+    fetchAuthUsers();
+  }, []);
+
+  // Auto-fill email when user is selected
+  const handleUserSelect = (userId: string) => {
+    setSelectedUserId(userId);
+    const user = authUsers.find(u => u.id === userId);
+    if (user) {
+      setFormData(prev => ({ ...prev, email: user.email }));
+      if (user.name) {
+        const parts = user.name.split(' ');
+        setFormData(prev => ({
+          ...prev,
+          firstName: parts[0] || '',
+          lastName: parts.slice(1).join(' ') || '',
+        }));
+      }
+    }
+  };
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -85,6 +134,7 @@ export default function AddMembership() {
         duration,
         end_date: endDate,
         status: 'active',
+        user_id: selectedUserId || undefined,
       });
 
       toast.success('Membership created successfully!', {
@@ -110,6 +160,27 @@ export default function AddMembership() {
           <h1 className="font-display text-2xl font-bold text-foreground mb-6">Add New Membership</h1>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Link to Auth User */}
+            <div className="space-y-2">
+              <Label className="text-foreground">Link to User Account (Optional)</Label>
+              <Select value={selectedUserId} onValueChange={handleUserSelect}>
+                <SelectTrigger className="h-12 rounded-xl">
+                  <SelectValue placeholder={loadingUsers ? "Loading users..." : "Select user to link (optional)"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">No linked account</SelectItem>
+                  {authUsers.map((user) => (
+                    <SelectItem key={user.id} value={user.id}>
+                      {user.name || user.email} ({user.email})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Link this membership to an existing user account for self-service access
+              </p>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="firstName" className="text-foreground">First Name *</Label>
