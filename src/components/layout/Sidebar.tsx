@@ -86,7 +86,7 @@ export function Sidebar() {
       <nav className="flex-1 p-3 space-y-6 overflow-y-auto">
         {/* Main */}
         <NavGroup title="Main" collapsed={collapsed}>
-          <NavItem to="/dashboard" icon={Home} label="Dashboard" collapsed={collapsed} />
+          <NavItem to={isAdmin ? "/admin" : "/user"} icon={Home} label="Home" collapsed={collapsed} />
         </NavGroup>
 
         {/* Catalog */}

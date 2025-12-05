@@ -24,16 +24,32 @@ export default function Auth() {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
+  const redirectBasedOnRole = async (userId: string) => {
+    const { data } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .maybeSingle();
+    
+    if (data?.role === 'admin') {
+      navigate('/admin', { replace: true });
+    } else {
+      navigate('/user', { replace: true });
+    }
+  };
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
-        navigate('/dashboard', { replace: true });
+        setTimeout(() => {
+          redirectBasedOnRole(session.user.id);
+        }, 0);
       }
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        navigate('/dashboard', { replace: true });
+        redirectBasedOnRole(session.user.id);
       }
     });
 

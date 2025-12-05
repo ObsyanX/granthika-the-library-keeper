@@ -1,25 +1,27 @@
 import { Moon, Sun, LogOut, BookOpen } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 export function Header() {
   const { theme, toggleTheme } = useTheme();
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     await logout();
-    navigate('/');
+    navigate('/auth');
   };
 
   const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'User';
+  const homeLink = isAdmin ? '/admin' : '/user';
 
   return (
     <header className="glass-card sticky top-0 z-30 border-b border-border/50">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+        <Link to={homeLink} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
             <BookOpen className="w-6 h-6 text-primary-foreground" />
           </div>
@@ -27,12 +29,15 @@ export function Header() {
             <h1 className="font-display text-xl font-bold text-foreground">Granthikaḥ</h1>
             <p className="text-xs text-muted-foreground">ग्रन्थिकः • The Keeper of Books</p>
           </div>
-        </div>
+        </Link>
 
         <div className="flex items-center gap-4">
           {user && (
             <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-accent/50 text-sm">
               <span className="font-medium text-foreground">{userName}</span>
+              {isAdmin && (
+                <Badge variant="secondary" className="text-xs">Admin</Badge>
+              )}
             </div>
           )}
 
