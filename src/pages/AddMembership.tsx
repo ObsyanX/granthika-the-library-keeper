@@ -121,6 +121,17 @@ export default function AddMembership() {
       const endDate = calculateEndDate(formData.startDate, duration);
       const fullName = `${formData.firstName} ${formData.lastName}`;
 
+      // Auto-link: find auth user by email if not manually selected
+      let linkUserId = selectedUserId;
+      if (!linkUserId && formData.email) {
+        const matchingUser = authUsers.find(
+          u => u.email.toLowerCase() === formData.email.toLowerCase()
+        );
+        if (matchingUser) {
+          linkUserId = matchingUser.id;
+        }
+      }
+
       await addMember({
         membership_no: membershipNo,
         name: fullName,
@@ -134,11 +145,12 @@ export default function AddMembership() {
         duration,
         end_date: endDate,
         status: 'active',
-        user_id: selectedUserId || undefined,
+        user_id: linkUserId || undefined,
       });
 
+      const linkedMsg = linkUserId ? ' (linked to user account)' : '';
       toast.success('Membership created successfully!', {
-        description: `${fullName} has been registered with ID: ${membershipNo}`,
+        description: `${fullName} has been registered with ID: ${membershipNo}${linkedMsg}`,
       });
       navigate('/membership');
     } catch (error: any) {
