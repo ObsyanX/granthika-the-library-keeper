@@ -35,12 +35,13 @@ export default function AdminHome() {
     { label: 'Update Book/Movie', icon: RefreshCw, path: '/books', color: 'bg-secondary' },
     { label: 'Add Membership', icon: Users, path: '/membership/add', color: 'gradient-primary' },
     { label: 'Update Membership', icon: RefreshCw, path: '/membership/update', color: 'bg-secondary' },
+    { label: 'Library Settings', icon: Settings, path: '/admin/settings', color: 'bg-muted text-foreground' },
   ];
 
   const transactionActions = [
     { label: 'Issue Book', icon: BookOpen, path: '/transactions/issue', color: 'gradient-primary' },
     { label: 'Return Book', icon: RefreshCw, path: '/transactions/return', color: 'bg-secondary' },
-    { label: 'Pay Fine', icon: CreditCard, path: '/transactions/fine', color: 'bg-destructive' },
+    { label: 'Record Fine Payment', icon: CreditCard, path: '/transactions/fine', color: 'bg-destructive' },
   ];
 
   const reportActions = [
