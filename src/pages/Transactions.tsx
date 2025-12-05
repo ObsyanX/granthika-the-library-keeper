@@ -50,14 +50,12 @@ export default function Transactions() {
             description="Process book returns and calculate any applicable fines"
             onClick={() => navigate('/transactions/return')}
           />
-          {isAdmin && (
-            <TransactionCard
-              icon={CreditCard}
-              title="Record Fine Payment"
-              description="Process and record fine payments from members"
-              onClick={() => navigate('/transactions/fine')}
-            />
-          )}
+          <TransactionCard
+            icon={CreditCard}
+            title={isAdmin ? "Record Fine Payment" : "Pay My Fines"}
+            description={isAdmin ? "Process and record fine payments from members" : "View and pay your pending fines"}
+            onClick={() => navigate('/transactions/fine')}
+          />
         </div>
       </div>
     </DashboardLayout>

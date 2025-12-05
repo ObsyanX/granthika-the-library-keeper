@@ -103,9 +103,7 @@ export function Sidebar() {
           <NavItem to="/transactions/search" icon={Search} label="Book Available" collapsed={collapsed} />
           <NavItem to="/transactions/issue" icon={BookOpen} label="Issue Book" collapsed={collapsed} />
           <NavItem to="/transactions/return" icon={RefreshCw} label="Return Book" collapsed={collapsed} />
-          {isAdmin && (
-            <NavItem to="/transactions/fine" icon={CreditCard} label="Pay Fine" collapsed={collapsed} />
-          )}
+          <NavItem to="/transactions/fine" icon={CreditCard} label={isAdmin ? "Record Fine" : "Pay Fine"} collapsed={collapsed} />
         </NavGroup>
 
         {/* Membership (Admin Only) */}
