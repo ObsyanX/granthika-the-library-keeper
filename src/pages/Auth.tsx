@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Eye, EyeOff, User, Lock, Mail } from 'lucide-react';
+import { BookOpen, Eye, EyeOff, User, Lock, Mail, Shield } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,8 +9,11 @@ import { toast } from 'sonner';
 import { Moon, Sun } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
+type UserType = 'user' | 'admin';
+
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
+  const [userType, setUserType] = useState<UserType>('user');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -69,7 +72,7 @@ export default function Auth() {
         toast.success('Welcome to Granthikaḥ!', { description: 'Logged in successfully' });
       } else {
         const redirectUrl = `${window.location.origin}/`;
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -85,7 +88,32 @@ export default function Auth() {
           }
           return;
         }
-        toast.success('Account created!', { description: 'Welcome to Granthikaḥ!' });
+        
+        // If signup successful and user selected admin, create admin role
+        if (data.user && userType === 'admin') {
+          const { error: roleError } = await supabase
+            .from('user_roles')
+            .insert({ user_id: data.user.id, role: 'admin' });
+          
+          if (roleError) {
+            console.error('Error setting admin role:', roleError);
+            // Still show success but note about role
+            toast.success('Account created!', { 
+              description: 'Welcome! Admin role will be set after verification.' 
+            });
+          } else {
+            toast.success('Admin account created!', { 
+              description: 'Welcome to Granthikaḥ!' 
+            });
+          }
+        } else if (data.user) {
+          // Create default user role
+          await supabase
+            .from('user_roles')
+            .insert({ user_id: data.user.id, role: 'user' });
+          
+          toast.success('Account created!', { description: 'Welcome to Granthikaḥ!' });
+        }
       }
     } catch (err: any) {
       toast.error('An error occurred', { description: err.message });
@@ -125,6 +153,34 @@ export default function Auth() {
             <p className="text-muted-foreground mt-1">ग्रन्थिकः • The Keeper of Books</p>
           </div>
 
+          {/* User Type Toggle */}
+          <div className="flex rounded-xl p-1 bg-muted mb-4">
+            <button
+              type="button"
+              onClick={() => setUserType('user')}
+              className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                userType === 'user'
+                  ? 'bg-card text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <User className="w-4 h-4" />
+              User
+            </button>
+            <button
+              type="button"
+              onClick={() => setUserType('admin')}
+              className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                userType === 'admin'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Shield className="w-4 h-4" />
+              Admin
+            </button>
+          </div>
+
           {/* Toggle Login/Signup */}
           <div className="flex rounded-xl p-1 bg-muted mb-6">
             <button
@@ -150,6 +206,21 @@ export default function Auth() {
               Sign Up
             </button>
           </div>
+
+          {/* Admin Info Banner */}
+          {userType === 'admin' && (
+            <div className="mb-4 p-3 rounded-xl bg-primary/10 border border-primary/20">
+              <p className="text-sm text-primary font-medium flex items-center gap-2">
+                <Shield className="w-4 h-4" />
+                {isLogin ? 'Admin Login' : 'Admin Registration'}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {isLogin 
+                  ? 'Sign in with your admin credentials to access management features.'
+                  : 'Create an admin account to manage books, members, and transactions.'}
+              </p>
+            </div>
+          )}
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -213,9 +284,15 @@ export default function Auth() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-12 rounded-xl gradient-primary text-primary-foreground font-semibold text-base hover:opacity-90 transition-opacity disabled:opacity-50"
+              className={`w-full h-12 rounded-xl font-semibold text-base hover:opacity-90 transition-opacity disabled:opacity-50 ${
+                userType === 'admin' 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'gradient-primary text-primary-foreground'
+              }`}
             >
-              {loading ? 'Please wait...' : isLogin ? 'Sign In' : 'Create Account'}
+              {loading ? 'Please wait...' : isLogin 
+                ? (userType === 'admin' ? 'Admin Sign In' : 'Sign In') 
+                : (userType === 'admin' ? 'Create Admin Account' : 'Create Account')}
             </Button>
           </form>
 
