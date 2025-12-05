@@ -19,10 +19,12 @@ export type Database = {
           author: string
           available_copies: number
           copies: number
+          cost: number | null
           cover_url: string | null
           created_at: string
           genre: string
           id: string
+          procurement_date: string | null
           serial_no: string
           title: string
           type: string
@@ -32,10 +34,12 @@ export type Database = {
           author: string
           available_copies?: number
           copies?: number
+          cost?: number | null
           cover_url?: string | null
           created_at?: string
           genre: string
           id?: string
+          procurement_date?: string | null
           serial_no: string
           title: string
           type?: string
@@ -45,10 +49,12 @@ export type Database = {
           author?: string
           available_copies?: number
           copies?: number
+          cost?: number | null
           cover_url?: string | null
           created_at?: string
           genre?: string
           id?: string
+          procurement_date?: string | null
           serial_no?: string
           title?: string
           type?: string
@@ -56,42 +62,101 @@ export type Database = {
         }
         Relationships: []
       }
+      issue_requests: {
+        Row: {
+          book_title: string
+          created_at: string
+          fulfilled_date: string | null
+          id: string
+          member_id: string
+          requested_date: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          book_title: string
+          created_at?: string
+          fulfilled_date?: string | null
+          id?: string
+          member_id: string
+          requested_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          book_title?: string
+          created_at?: string
+          fulfilled_date?: string | null
+          id?: string
+          member_id?: string
+          requested_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "issue_requests_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       members: {
         Row: {
+          aadhar_card: string | null
+          contact_address: string | null
+          contact_number: string | null
           created_at: string
           duration: string
           email: string
           end_date: string
+          first_name: string | null
           id: string
+          last_name: string | null
           membership_no: string
           name: string
           start_date: string
           status: string
           updated_at: string
+          user_id: string | null
         }
         Insert: {
+          aadhar_card?: string | null
+          contact_address?: string | null
+          contact_number?: string | null
           created_at?: string
           duration?: string
           email: string
           end_date: string
+          first_name?: string | null
           id?: string
+          last_name?: string | null
           membership_no: string
           name: string
           start_date?: string
           status?: string
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
+          aadhar_card?: string | null
+          contact_address?: string | null
+          contact_number?: string | null
           created_at?: string
           duration?: string
           email?: string
           end_date?: string
+          first_name?: string | null
           id?: string
+          last_name?: string | null
           membership_no?: string
           name?: string
           start_date?: string
           status?: string
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }

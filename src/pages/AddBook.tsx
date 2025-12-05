@@ -1,14 +1,30 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, BookOpen, Film, Loader2 } from 'lucide-react';
+import { format } from 'date-fns';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { genres } from '@/lib/mockData';
 import { useBooks } from '@/hooks/useBooks';
+
+const genres = [
+  'Science',
+  'Economics', 
+  'Fiction',
+  'Children',
+  'Personal Development',
+];
+
+const genreCodes: Record<string, string> = {
+  'Science': 'SC',
+  'Economics': 'EC',
+  'Fiction': 'FC',
+  'Children': 'CH',
+  'Personal Development': 'PD',
+};
 
 export default function AddBook() {
   const navigate = useNavigate();
@@ -23,10 +39,33 @@ export default function AddBook() {
     genre: '',
     serialNo: '',
     copies: '',
+    cost: '',
+    procurementDate: format(new Date(), 'yyyy-MM-dd'),
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [editBookId, setEditBookId] = useState<string | null>(null);
+
+  // Auto-generate serial number based on genre and type
+  useEffect(() => {
+    if (!isEditMode && formData.genre) {
+      const code = genreCodes[formData.genre] || 'XX';
+      const typeCode = type === 'book' ? 'B' : 'M';
+      
+      // Find the next available number for this category
+      const existingSerials = books
+        .filter(b => b.serial_no.startsWith(`${code}${typeCode}`))
+        .map(b => {
+          const num = parseInt(b.serial_no.slice(3));
+          return isNaN(num) ? 0 : num;
+        });
+      
+      const nextNum = existingSerials.length > 0 ? Math.max(...existingSerials) + 1 : 1;
+      const newSerialNo = `${code}${typeCode}${nextNum.toString().padStart(3, '0')}`;
+      
+      setFormData(prev => ({ ...prev, serialNo: newSerialNo }));
+    }
+  }, [formData.genre, type, books, isEditMode]);
 
   // Auto-populate form when editing
   useEffect(() => {
@@ -42,6 +81,8 @@ export default function AddBook() {
             genre: book.genre,
             serialNo: book.serial_no,
             copies: book.copies.toString(),
+            cost: book.cost?.toString() || '0',
+            procurementDate: book.procurement_date || format(new Date(), 'yyyy-MM-dd'),
           });
         }
       };
@@ -56,6 +97,8 @@ export default function AddBook() {
     if (!formData.genre) newErrors.genre = 'Genre is required';
     if (!formData.serialNo.trim()) newErrors.serialNo = 'Serial number is required';
     if (!formData.copies.trim()) newErrors.copies = 'Number of copies is required';
+    if (!formData.cost.trim()) newErrors.cost = 'Cost is required';
+    if (!formData.procurementDate) newErrors.procurementDate = 'Procurement date is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -67,6 +110,7 @@ export default function AddBook() {
     setLoading(true);
     try {
       const copies = parseInt(formData.copies);
+      const cost = parseFloat(formData.cost);
       
       if (isEditMode && editBookId) {
         await updateBook(editBookId, {
@@ -76,6 +120,8 @@ export default function AddBook() {
           serial_no: formData.serialNo,
           type,
           copies,
+          cost,
+          procurement_date: formData.procurementDate,
         });
         toast.success(`${type === 'book' ? 'Book' : 'Movie'} updated successfully!`, {
           description: `"${formData.title}" has been updated`,
@@ -89,6 +135,8 @@ export default function AddBook() {
           type,
           copies,
           available_copies: copies,
+          cost,
+          procurement_date: formData.procurementDate,
         });
         toast.success(`${type === 'book' ? 'Book' : 'Movie'} added successfully!`, {
           description: `"${formData.title}" has been added to the catalog`,
@@ -170,10 +218,10 @@ export default function AddBook() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="genre" className="text-foreground">Genre *</Label>
+                <Label htmlFor="genre" className="text-foreground">Category *</Label>
                 <Select value={formData.genre} onValueChange={(value) => setFormData({ ...formData, genre: value })}>
                   <SelectTrigger className={`h-12 rounded-xl ${errors.genre ? 'border-destructive' : ''}`}>
-                    <SelectValue placeholder="Select genre" />
+                    <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
                     {genres.map((genre) => (
@@ -190,11 +238,12 @@ export default function AddBook() {
                   id="serialNo"
                   value={formData.serialNo}
                   onChange={(e) => setFormData({ ...formData, serialNo: e.target.value })}
-                  placeholder="e.g., BK007"
+                  placeholder="Auto-generated"
                   disabled={isEditMode}
-                  className={`h-12 rounded-xl ${errors.serialNo ? 'border-destructive' : ''}`}
+                  className={`h-12 rounded-xl ${errors.serialNo ? 'border-destructive' : ''} ${!isEditMode && formData.genre ? 'bg-muted' : ''}`}
                 />
                 {errors.serialNo && <p className="text-destructive text-sm">{errors.serialNo}</p>}
+                {!isEditMode && <p className="text-xs text-muted-foreground">Auto-generated based on category</p>}
               </div>
 
               <div className="space-y-2">
@@ -209,6 +258,33 @@ export default function AddBook() {
                   className={`h-12 rounded-xl ${errors.copies ? 'border-destructive' : ''}`}
                 />
                 {errors.copies && <p className="text-destructive text-sm">{errors.copies}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="cost" className="text-foreground">Cost (₹) *</Label>
+                <Input
+                  id="cost"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.cost}
+                  onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
+                  placeholder="Enter cost"
+                  className={`h-12 rounded-xl ${errors.cost ? 'border-destructive' : ''}`}
+                />
+                {errors.cost && <p className="text-destructive text-sm">{errors.cost}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="procurementDate" className="text-foreground">Date of Procurement *</Label>
+                <Input
+                  id="procurementDate"
+                  type="date"
+                  value={formData.procurementDate}
+                  onChange={(e) => setFormData({ ...formData, procurementDate: e.target.value })}
+                  className={`h-12 rounded-xl ${errors.procurementDate ? 'border-destructive' : ''}`}
+                />
+                {errors.procurementDate && <p className="text-destructive text-sm">{errors.procurementDate}</p>}
               </div>
             </div>
 

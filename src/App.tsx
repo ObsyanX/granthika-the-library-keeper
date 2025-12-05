@@ -7,6 +7,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import AdminHome from "./pages/AdminHome";
+import UserHome from "./pages/UserHome";
 import Books from "./pages/Books";
 import AddBook from "./pages/AddBook";
 import Transactions from "./pages/Transactions";
@@ -35,6 +37,8 @@ const App = () => (
               <Route path="/" element={<Auth />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/admin" element={<AdminHome />} />
+              <Route path="/user" element={<UserHome />} />
               <Route path="/books" element={<Books />} />
               <Route path="/books/add" element={<AddBook />} />
               <Route path="/books/edit/:serialNo" element={<AddBook />} />

@@ -6,6 +6,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useMembers } from '@/hooks/useMembers';
 
@@ -33,8 +34,12 @@ export default function AddMembership() {
   const { addMember } = useMembers();
   
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
+    contactNumber: '',
+    contactAddress: '',
+    aadharCard: '',
     startDate: format(new Date(), 'yyyy-MM-dd'),
   });
   const [duration, setDuration] = useState<Duration>('6months');
@@ -43,11 +48,15 @@ export default function AddMembership() {
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    if (!formData.name.trim()) newErrors.name = 'Name is required';
+    if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
+    if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
     if (!formData.email.trim()) newErrors.email = 'Email is required';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email';
     }
+    if (!formData.contactNumber.trim()) newErrors.contactNumber = 'Contact number is required';
+    if (!formData.contactAddress.trim()) newErrors.contactAddress = 'Contact address is required';
+    if (!formData.aadharCard.trim()) newErrors.aadharCard = 'Aadhar card number is required';
     if (!formData.startDate) newErrors.startDate = 'Start date is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -61,11 +70,17 @@ export default function AddMembership() {
     try {
       const membershipNo = generateMembershipNo();
       const endDate = calculateEndDate(formData.startDate, duration);
+      const fullName = `${formData.firstName} ${formData.lastName}`;
 
       await addMember({
         membership_no: membershipNo,
-        name: formData.name,
+        name: fullName,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
         email: formData.email,
+        contact_number: formData.contactNumber,
+        contact_address: formData.contactAddress,
+        aadhar_card: formData.aadharCard,
         start_date: formData.startDate,
         duration,
         end_date: endDate,
@@ -73,7 +88,7 @@ export default function AddMembership() {
       });
 
       toast.success('Membership created successfully!', {
-        description: `${formData.name} has been registered with ID: ${membershipNo}`,
+        description: `${fullName} has been registered with ID: ${membershipNo}`,
       });
       navigate('/membership');
     } catch (error: any) {
@@ -95,16 +110,30 @@ export default function AddMembership() {
           <h1 className="font-display text-2xl font-bold text-foreground mb-6">Add New Membership</h1>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-foreground">Full Name *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Enter member's full name"
-                className={`h-12 rounded-xl ${errors.name ? 'border-destructive' : ''}`}
-              />
-              {errors.name && <p className="text-destructive text-sm">{errors.name}</p>}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="firstName" className="text-foreground">First Name *</Label>
+                <Input
+                  id="firstName"
+                  value={formData.firstName}
+                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                  placeholder="Enter first name"
+                  className={`h-12 rounded-xl ${errors.firstName ? 'border-destructive' : ''}`}
+                />
+                {errors.firstName && <p className="text-destructive text-sm">{errors.firstName}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="lastName" className="text-foreground">Last Name *</Label>
+                <Input
+                  id="lastName"
+                  value={formData.lastName}
+                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                  placeholder="Enter last name"
+                  className={`h-12 rounded-xl ${errors.lastName ? 'border-destructive' : ''}`}
+                />
+                {errors.lastName && <p className="text-destructive text-sm">{errors.lastName}</p>}
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -118,6 +147,43 @@ export default function AddMembership() {
                 className={`h-12 rounded-xl ${errors.email ? 'border-destructive' : ''}`}
               />
               {errors.email && <p className="text-destructive text-sm">{errors.email}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="contactNumber" className="text-foreground">Contact Number *</Label>
+              <Input
+                id="contactNumber"
+                value={formData.contactNumber}
+                onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
+                placeholder="Enter contact number"
+                className={`h-12 rounded-xl ${errors.contactNumber ? 'border-destructive' : ''}`}
+              />
+              {errors.contactNumber && <p className="text-destructive text-sm">{errors.contactNumber}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="contactAddress" className="text-foreground">Contact Address *</Label>
+              <Textarea
+                id="contactAddress"
+                value={formData.contactAddress}
+                onChange={(e) => setFormData({ ...formData, contactAddress: e.target.value })}
+                placeholder="Enter full address"
+                className={`rounded-xl ${errors.contactAddress ? 'border-destructive' : ''}`}
+                rows={3}
+              />
+              {errors.contactAddress && <p className="text-destructive text-sm">{errors.contactAddress}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="aadharCard" className="text-foreground">Aadhar Card No *</Label>
+              <Input
+                id="aadharCard"
+                value={formData.aadharCard}
+                onChange={(e) => setFormData({ ...formData, aadharCard: e.target.value })}
+                placeholder="Enter 12-digit Aadhar number"
+                className={`h-12 rounded-xl ${errors.aadharCard ? 'border-destructive' : ''}`}
+              />
+              {errors.aadharCard && <p className="text-destructive text-sm">{errors.aadharCard}</p>}
             </div>
 
             <div className="space-y-2">
