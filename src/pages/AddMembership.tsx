@@ -163,12 +163,12 @@ export default function AddMembership() {
             {/* Link to Auth User */}
             <div className="space-y-2">
               <Label className="text-foreground">Link to User Account (Optional)</Label>
-              <Select value={selectedUserId} onValueChange={handleUserSelect}>
+              <Select value={selectedUserId || "__none__"} onValueChange={(val) => handleUserSelect(val === "__none__" ? "" : val)}>
                 <SelectTrigger className="h-12 rounded-xl">
                   <SelectValue placeholder={loadingUsers ? "Loading users..." : "Select user to link (optional)"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No linked account</SelectItem>
+                  <SelectItem value="__none__">No linked account</SelectItem>
                   {authUsers.map((user) => (
                     <SelectItem key={user.id} value={user.id}>
                       {user.name || user.email} ({user.email})
