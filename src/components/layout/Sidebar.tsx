@@ -65,8 +65,7 @@ function NavGroup({ title, children, collapsed }: NavGroupProps) {
 }
 
 export function Sidebar() {
-  const { user } = useAuth();
-  const isAdmin = user?.role === 'admin';
+  const { isAdmin } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
 
   return (
