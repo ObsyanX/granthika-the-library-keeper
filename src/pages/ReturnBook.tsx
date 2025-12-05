@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, RefreshCw, Loader2 } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
@@ -9,23 +9,55 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useBooks } from '@/hooks/useBooks';
-
-const FINE_PER_DAY = 5; // ₹5 per day
+import { useAuth } from '@/contexts/AuthContext';
+import { useSettings } from '@/hooks/useSettings';
+import { supabase } from '@/integrations/supabase/client';
+import { Member } from '@/hooks/useMembers';
 
 export default function ReturnBook() {
   const navigate = useNavigate();
   const { issuedTransactions, overdueTransactions, returnBook, loading } = useTransactions();
   const { books, updateBook } = useBooks();
+  const { user, isAdmin } = useAuth();
+  const { getDailyFineRate } = useSettings();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTransaction, setSelectedTransaction] = useState<string | null>(null);
   const [returnDate, setReturnDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [userMember, setUserMember] = useState<Member | null>(null);
+  const [memberLoading, setMemberLoading] = useState(!isAdmin);
 
+  const finePerDay = getDailyFineRate();
+
+  // Fetch user's membership for non-admins
+  useEffect(() => {
+    const fetchUserMember = async () => {
+      if (!isAdmin && user?.id) {
+        setMemberLoading(true);
+        const { data } = await supabase
+          .from('members')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (data) {
+          setUserMember(data as Member);
+        }
+        setMemberLoading(false);
+      }
+    };
+    fetchUserMember();
+  }, [user, isAdmin]);
+
+  // Filter transactions based on role
   const allIssuedTransactions = [...issuedTransactions, ...overdueTransactions];
+  const filteredByRole = isAdmin 
+    ? allIssuedTransactions 
+    : allIssuedTransactions.filter(t => t.member_id === userMember?.id);
   
-  const filteredTransactions = allIssuedTransactions.filter(t => 
+  const filteredTransactions = filteredByRole.filter(t => 
     t.book?.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     t.book?.serial_no.toLowerCase().includes(searchTerm.toLowerCase()) ||
     t.member?.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -46,7 +78,7 @@ export default function ReturnBook() {
     const dueDate = new Date(selectedData.due_date);
     const returnDt = new Date(returnDate);
     const daysOverdue = differenceInDays(returnDt, dueDate);
-    return daysOverdue > 0 ? daysOverdue * FINE_PER_DAY : 0;
+    return daysOverdue > 0 ? daysOverdue * finePerDay : 0;
   };
 
   const handleConfirm = async () => {
@@ -65,17 +97,14 @@ export default function ReturnBook() {
         });
       }
 
-      if (fine > 0) {
-        toast.success('Book returned!', {
-          description: `Fine of ₹${fine} is pending. Redirecting to pay fine...`,
-        });
-        navigate('/transactions/fine', { state: { transactionId: selectedTransaction } });
-      } else {
-        toast.success('Book returned successfully!', {
-          description: `"${selectedData.book?.title}" has been returned`,
-        });
-        navigate('/transactions');
-      }
+      toast.success('Book returned!', {
+        description: fine > 0 
+          ? `Fine of ₹${fine} is pending. Redirecting to pay fine...`
+          : `"${selectedData.book?.title}" has been returned successfully`,
+      });
+      
+      // Always redirect to Pay Fine page after return (per Excel spec)
+      navigate('/transactions/fine', { state: { transactionId: selectedTransaction } });
     } catch (error: any) {
       toast.error('Failed to return book', { description: error.message });
     } finally {
@@ -83,11 +112,31 @@ export default function ReturnBook() {
     }
   };
 
-  if (loading) {
+  if (loading || memberLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Check if non-admin user has membership
+  if (!isAdmin && !userMember) {
+    return (
+      <DashboardLayout>
+        <div className="max-w-4xl mx-auto animate-fade-in">
+          <Button variant="ghost" onClick={() => navigate('/transactions')} className="mb-6">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Transactions
+          </Button>
+          <div className="neu-card bg-card rounded-2xl p-8 text-center">
+            <RefreshCw className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
+            <h2 className="text-xl font-semibold text-foreground mb-2">No Membership Found</h2>
+            <p className="text-muted-foreground">You need an active membership to return books.</p>
+            <p className="text-muted-foreground text-sm mt-2">Contact the librarian to register for a membership.</p>
+          </div>
         </div>
       </DashboardLayout>
     );
@@ -221,7 +270,7 @@ export default function ReturnBook() {
               {selectedData.status === 'overdue' && (
                 <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20">
                   <p className="text-destructive font-medium">⚠️ This book is overdue!</p>
-                  <p className="text-sm text-muted-foreground">Fine: ₹{FINE_PER_DAY}/day after due date</p>
+                  <p className="text-sm text-muted-foreground">Fine: ₹{finePerDay}/day after due date</p>
                 </div>
               )}
 

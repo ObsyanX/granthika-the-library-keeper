@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { useBooks } from '@/hooks/useBooks';
 import { useMembers, Member } from '@/hooks/useMembers';
 import { useTransactions } from '@/hooks/useTransactions';
+import { useIssueRequests } from '@/hooks/useIssueRequests';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -19,6 +20,7 @@ export default function Reports() {
   const { books } = useBooks();
   const { members } = useMembers();
   const { transactions, issuedTransactions, overdueTransactions } = useTransactions();
+  const { pendingRequests } = useIssueRequests();
   const { user, isAdmin } = useAuth();
   const [userMember, setUserMember] = useState<Member | null>(null);
 
@@ -485,10 +487,39 @@ export default function Reports() {
           {/* Pending Requests (Admin Only) */}
           {activeReport === 'pending' && isAdmin && (
             <div className="overflow-x-auto">
-              <div className="py-12 text-center text-muted-foreground">
-                <FileText className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
-                No pending issue requests
-              </div>
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Membership No</th>
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Member Name</th>
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Book/Movie Title</th>
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Requested Date</th>
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingRequests.length > 0 ? pendingRequests.map((request) => (
+                    <tr key={request.id} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
+                      <td className="py-4 px-6 font-mono text-foreground">{request.member?.membership_no || '-'}</td>
+                      <td className="py-4 px-6 font-medium text-foreground">{request.member?.name || '-'}</td>
+                      <td className="py-4 px-6 text-foreground">{request.book_title}</td>
+                      <td className="py-4 px-6 text-muted-foreground">{request.requested_date}</td>
+                      <td className="py-4 px-6">
+                        <span className="bg-secondary/10 text-secondary-foreground px-2 py-1 rounded text-sm font-medium">
+                          {request.status}
+                        </span>
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan={5} className="py-12 text-center text-muted-foreground">
+                        <FileText className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
+                        No pending issue requests
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           )}
 
