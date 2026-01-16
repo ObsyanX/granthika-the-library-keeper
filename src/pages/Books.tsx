@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Search, Edit, BookOpen, Film, Loader2, Filter, X, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, Search, Edit, BookOpen, Film, Filter, X, CheckCircle, XCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useBooks } from '@/hooks/useBooks';
 import { Badge } from '@/components/ui/badge';
+import { BookGridSkeleton } from '@/components/skeletons';
 import {
   Select,
   SelectContent,
@@ -147,13 +148,8 @@ export default function Books() {
           </div>
         </div>
 
-        {/* Loading State */}
-        {loading && (
-          <div className="flex flex-col items-center justify-center py-16">
-            <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
-            <p className="text-muted-foreground">Loading catalog...</p>
-          </div>
-        )}
+        {/* Loading State with Skeleton */}
+        {loading && <BookGridSkeleton count={8} />}
 
         {/* Books Grid */}
         {!loading && filteredBooks.length > 0 && (

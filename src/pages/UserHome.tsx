@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Member } from '@/hooks/useMembers';
 import { format } from 'date-fns';
+import { StatsGridSkeleton, TransactionListSkeleton } from '@/components/skeletons';
 
 const categoryCodeRanges = [
   { category: 'Science', code: 'SC', bookRange: 'SCB001 - SCB999', movieRange: 'SCM001 - SCM999' },
@@ -117,7 +118,9 @@ export default function UserHome() {
         )}
 
         {/* Quick Stats */}
-        {userMember && (
+        {loading ? (
+          <StatsGridSkeleton count={4} />
+        ) : userMember && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <Card className="border-border/50">
               <CardContent className="pt-6">

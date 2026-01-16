@@ -9,6 +9,7 @@ import { useBooks } from '@/hooks/useBooks';
 import { useMembers } from '@/hooks/useMembers';
 import { useTransactions } from '@/hooks/useTransactions';
 import { format } from 'date-fns';
+import { StatsGridSkeleton } from '@/components/skeletons';
 
 const categoryCodeRanges = [
   { category: 'Science', code: 'SC', bookRange: 'SCB001 - SCB999', movieRange: 'SCM001 - SCM999' },
@@ -20,9 +21,11 @@ const categoryCodeRanges = [
 
 export default function AdminHome() {
   const navigate = useNavigate();
-  const { books } = useBooks();
-  const { members, activeMembers } = useMembers();
-  const { transactions, issuedTransactions, overdueTransactions } = useTransactions();
+  const { books, loading: booksLoading } = useBooks();
+  const { members, activeMembers, loading: membersLoading } = useMembers();
+  const { transactions, issuedTransactions, overdueTransactions, loading: transactionsLoading } = useTransactions();
+
+  const isLoading = booksLoading || membersLoading || transactionsLoading;
 
   const today = format(new Date(), 'yyyy-MM-dd');
   const dueTodayCount = issuedTransactions.filter(t => t.due_date === today).length;
@@ -51,71 +54,75 @@ export default function AdminHome() {
         </section>
 
         {/* Key Metrics */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="border-border/50 hover:border-primary/30 transition-colors">
-            <CardContent className="pt-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Total Catalog</p>
-                  <p className="text-2xl font-bold text-foreground">{books.length}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{totalCopies} total copies</p>
+        {isLoading ? (
+          <StatsGridSkeleton count={4} />
+        ) : (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card className="border-border/50 hover:border-primary/30 transition-colors">
+              <CardContent className="pt-6">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Total Catalog</p>
+                    <p className="text-2xl font-bold text-foreground">{books.length}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{totalCopies} total copies</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Package className="w-5 h-5 text-primary" />
+                  </div>
                 </div>
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Package className="w-5 h-5 text-primary" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className="border-border/50 hover:border-primary/30 transition-colors">
-            <CardContent className="pt-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Active Members</p>
-                  <p className="text-2xl font-bold text-foreground">{activeMembers.length}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{members.length} total</p>
+            <Card className="border-border/50 hover:border-primary/30 transition-colors">
+              <CardContent className="pt-6">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Active Members</p>
+                    <p className="text-2xl font-bold text-foreground">{activeMembers.length}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{members.length} total</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
+                    <Users className="w-5 h-5 text-accent-foreground" />
+                  </div>
                 </div>
-                <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
-                  <Users className="w-5 h-5 text-accent-foreground" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className="border-border/50 hover:border-primary/30 transition-colors">
-            <CardContent className="pt-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Currently Issued</p>
-                  <p className="text-2xl font-bold text-foreground">{issuedTransactions.length}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{borrowedCopies} copies out</p>
+            <Card className="border-border/50 hover:border-primary/30 transition-colors">
+              <CardContent className="pt-6">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Currently Issued</p>
+                    <p className="text-2xl font-bold text-foreground">{issuedTransactions.length}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{borrowedCopies} copies out</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-secondary-foreground" />
+                  </div>
                 </div>
-                <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-secondary-foreground" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className={`border-border/50 ${overdueTransactions.length > 0 ? 'border-destructive/50 bg-destructive/5' : ''}`}>
-            <CardContent className="pt-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Overdue Items</p>
-                  <p className={`text-2xl font-bold ${overdueTransactions.length > 0 ? 'text-destructive' : 'text-foreground'}`}>
-                    {overdueTransactions.length}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">{dueTodayCount} due today</p>
+            <Card className={`border-border/50 ${overdueTransactions.length > 0 ? 'border-destructive/50 bg-destructive/5' : ''}`}>
+              <CardContent className="pt-6">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Overdue Items</p>
+                    <p className={`text-2xl font-bold ${overdueTransactions.length > 0 ? 'text-destructive' : 'text-foreground'}`}>
+                      {overdueTransactions.length}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">{dueTodayCount} due today</p>
+                  </div>
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                    overdueTransactions.length > 0 ? 'bg-destructive/10' : 'bg-muted'
+                  }`}>
+                    <AlertTriangle className={`w-5 h-5 ${overdueTransactions.length > 0 ? 'text-destructive' : 'text-muted-foreground'}`} />
+                  </div>
                 </div>
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                  overdueTransactions.length > 0 ? 'bg-destructive/10' : 'bg-muted'
-                }`}>
-                  <AlertTriangle className={`w-5 h-5 ${overdueTransactions.length > 0 ? 'text-destructive' : 'text-muted-foreground'}`} />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Quick Actions */}
         <section className="space-y-4">

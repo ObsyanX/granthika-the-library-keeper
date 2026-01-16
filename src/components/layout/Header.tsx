@@ -1,4 +1,4 @@
-import { Moon, Sun, LogOut, BookOpen, Menu, Search, Bell } from 'lucide-react';
+import { Moon, Sun, LogOut, BookOpen, Search } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { NotificationDropdown } from '@/components/NotificationDropdown';
 
 export function Header() {
   const { theme, toggleTheme } = useTheme();
@@ -21,6 +22,16 @@ export function Header() {
   const handleLogout = async () => {
     await logout();
     navigate('/auth');
+  };
+
+  const openSearch = () => {
+    // Dispatch keyboard event to open global search
+    const event = new KeyboardEvent('keydown', {
+      key: 'k',
+      metaKey: true,
+      bubbles: true,
+    });
+    document.dispatchEvent(event);
   };
 
   const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'User';
@@ -49,7 +60,7 @@ export function Header() {
           <Button 
             variant="outline" 
             className="w-full justify-start text-muted-foreground h-10 rounded-xl border-border/50"
-            onClick={() => navigate('/books')}
+            onClick={openSearch}
           >
             <Search className="w-4 h-4 mr-2" />
             <span>Search catalog...</span>
@@ -65,12 +76,15 @@ export function Header() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/books')}
+            onClick={openSearch}
             className="lg:hidden rounded-full"
             aria-label="Search catalog"
           >
             <Search className="w-5 h-5" />
           </Button>
+
+          {/* Notifications */}
+          {user && <NotificationDropdown />}
 
           {/* Theme Toggle */}
           <Button
