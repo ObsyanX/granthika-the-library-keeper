@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Home, BookOpen, RefreshCw, FileText, Users, Menu, X, Search, Edit, CreditCard, PlusCircle, Settings, BarChart3, UserPlus } from 'lucide-react';
+import { Home, BookOpen, RefreshCw, Users, Menu, CreditCard, PlusCircle, Settings, BarChart3, UserPlus, User } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
@@ -15,29 +15,31 @@ export function MobileNav() {
 
   const primaryNavItems = [
     { to: homeLink, icon: Home, label: 'Home' },
-    { to: '/books', icon: BookOpen, label: 'Catalog' },
+    { to: '/books', icon: BookOpen, label: 'Books' },
     { to: '/transactions', icon: RefreshCw, label: 'Actions' },
     { to: '/reports', icon: BarChart3, label: 'Reports' },
   ];
 
   const transactionItems = [
-    { to: '/transactions', icon: RefreshCw, label: 'All Transactions' },
-    { to: '/transactions/search', icon: Search, label: 'Find Available Books' },
-    { to: '/transactions/issue', icon: PlusCircle, label: 'Borrow a Book' },
-    { to: '/transactions/return', icon: RefreshCw, label: 'Return a Book' },
-    { to: '/transactions/fine', icon: CreditCard, label: isAdmin ? 'Record Fine Payment' : 'Pay My Fines' },
+    { to: '/transactions', icon: RefreshCw, label: isAdmin ? 'All Transactions' : 'My Transactions' },
+    { to: '/transactions/issue', icon: PlusCircle, label: isAdmin ? 'Issue Book' : 'Borrow Book' },
+    { to: '/transactions/return', icon: RefreshCw, label: 'Return Book' },
+    { to: '/transactions/fine', icon: CreditCard, label: isAdmin ? 'Record Fine' : 'Pay Fine' },
   ];
 
   const memberItems = isAdmin ? [
     { to: '/membership', icon: Users, label: 'All Members' },
-    { to: '/membership/add', icon: UserPlus, label: 'Add New Member' },
-    { to: '/membership/update', icon: Edit, label: 'Edit Member' },
+    { to: '/membership/add', icon: UserPlus, label: 'Add Member' },
   ] : [];
 
   const adminItems = isAdmin ? [
-    { to: '/books/add', icon: PlusCircle, label: 'Add to Catalog' },
+    { to: '/books/add', icon: PlusCircle, label: 'Add Book' },
     { to: '/users', icon: Users, label: 'User Accounts' },
-    { to: '/admin/settings', icon: Settings, label: 'Library Settings' },
+    { to: '/admin/settings', icon: Settings, label: 'Settings' },
+  ] : [];
+
+  const accountItems = !isAdmin ? [
+    { to: '/profile', icon: User, label: 'Profile' },
   ] : [];
 
   return (
@@ -93,7 +95,7 @@ export function MobileNav() {
                         className="flex flex-col items-center gap-2 p-4 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
                       >
                         <PlusCircle className="w-6 h-6" />
-                        <span className="text-sm font-medium">Borrow Book</span>
+                        <span className="text-sm font-medium">{isAdmin ? 'Issue Book' : 'Borrow Book'}</span>
                       </NavLink>
                       <NavLink
                         to="/transactions/return"
@@ -177,6 +179,38 @@ export function MobileNav() {
                         </p>
                         <div className="space-y-1">
                           {adminItems.map((item) => (
+                            <NavLink
+                              key={item.to}
+                              to={item.to}
+                              onClick={() => setIsOpen(false)}
+                              className={({ isActive }) =>
+                                cn(
+                                  'flex items-center gap-3 px-4 py-3 rounded-xl transition-colors',
+                                  isActive 
+                                    ? 'bg-primary text-primary-foreground' 
+                                    : 'text-foreground hover:bg-muted'
+                                )
+                              }
+                            >
+                              <item.icon className="w-5 h-5" />
+                              <span className="font-medium">{item.label}</span>
+                            </NavLink>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Account (User Only) */}
+                  {accountItems.length > 0 && (
+                    <>
+                      <Separator />
+                      <div>
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                          Account
+                        </p>
+                        <div className="space-y-1">
+                          {accountItems.map((item) => (
                             <NavLink
                               key={item.to}
                               to={item.to}

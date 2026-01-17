@@ -4,16 +4,14 @@ import {
   BookOpen, 
   Users, 
   RefreshCw, 
-  FileText, 
   CreditCard,
   ChevronLeft,
   ChevronRight,
   UserPlus,
   PlusCircle,
-  Search,
-  Edit,
   Settings,
-  BarChart3
+  BarChart3,
+  User
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -113,17 +111,16 @@ export function Sidebar() {
       </button>
 
       <nav className="flex-1 p-3 space-y-4 overflow-y-auto scrollbar-thin">
-        {/* Main */}
+        {/* Overview */}
         <NavGroup title="Overview" collapsed={collapsed}>
           <NavItem to={isAdmin ? "/admin" : "/user"} icon={Home} label="Dashboard" collapsed={collapsed} />
-          <NavItem to="/books" icon={BookOpen} label="Catalog" collapsed={collapsed} />
+          <NavItem to="/books" icon={BookOpen} label={isAdmin ? "Catalog" : "Books"} collapsed={collapsed} />
         </NavGroup>
 
         {/* Transactions */}
         <NavGroup title="Transactions" collapsed={collapsed}>
-          <NavItem to="/transactions" icon={RefreshCw} label="All Transactions" collapsed={collapsed} />
-          <NavItem to="/transactions/search" icon={Search} label="Find Available" collapsed={collapsed} />
-          <NavItem to="/transactions/issue" icon={PlusCircle} label="Borrow Book" collapsed={collapsed} />
+          <NavItem to="/transactions" icon={RefreshCw} label={isAdmin ? "All Transactions" : "My Transactions"} collapsed={collapsed} />
+          <NavItem to="/transactions/issue" icon={PlusCircle} label={isAdmin ? "Issue Book" : "Borrow Book"} collapsed={collapsed} />
           <NavItem to="/transactions/return" icon={RefreshCw} label="Return Book" collapsed={collapsed} />
           <NavItem to="/transactions/fine" icon={CreditCard} label={isAdmin ? "Record Fine" : "Pay Fine"} collapsed={collapsed} />
         </NavGroup>
@@ -133,14 +130,13 @@ export function Sidebar() {
           <NavGroup title="Members" collapsed={collapsed}>
             <NavItem to="/membership" icon={Users} label="All Members" collapsed={collapsed} />
             <NavItem to="/membership/add" icon={UserPlus} label="Add Member" collapsed={collapsed} />
-            <NavItem to="/membership/update" icon={Edit} label="Edit Member" collapsed={collapsed} />
           </NavGroup>
         )}
 
-        {/* Admin */}
+        {/* Admin Only */}
         {isAdmin && (
           <NavGroup title="Administration" collapsed={collapsed}>
-            <NavItem to="/books/add" icon={PlusCircle} label="Add to Catalog" collapsed={collapsed} />
+            <NavItem to="/books/add" icon={PlusCircle} label="Add Book" collapsed={collapsed} />
             <NavItem to="/users" icon={Users} label="User Accounts" collapsed={collapsed} />
             <NavItem to="/admin/settings" icon={Settings} label="Settings" collapsed={collapsed} />
           </NavGroup>
@@ -150,6 +146,13 @@ export function Sidebar() {
         <NavGroup title="Reports" collapsed={collapsed}>
           <NavItem to="/reports" icon={BarChart3} label={isAdmin ? "All Reports" : "My Reports"} collapsed={collapsed} />
         </NavGroup>
+
+        {/* Account (User Only) */}
+        {!isAdmin && (
+          <NavGroup title="Account" collapsed={collapsed}>
+            <NavItem to="/profile" icon={User} label="Profile" collapsed={collapsed} />
+          </NavGroup>
+        )}
       </nav>
     </aside>
   );
