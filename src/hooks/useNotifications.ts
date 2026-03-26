@@ -126,7 +126,7 @@ export function useNotifications() {
       if (a.type !== 'overdue' && b.type === 'overdue') return 1;
       return b.createdAt.getTime() - a.createdAt.getTime();
     });
-  }, [transactions, isAdmin, readNotifications]);
+  }, [transactions, isAdmin, userMemberId, readNotifications]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
   const overdueCount = notifications.filter((n) => n.type === 'overdue').length;
