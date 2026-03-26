@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTransactions } from './useTransactions';
 import { useAuth } from '@/contexts/AuthContext';
-import { differenceInDays, parseISO, isAfter, isBefore, addDays } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
+import { differenceInDays, parseISO, isAfter } from 'date-fns';
 
 export interface Notification {
   id: string;
