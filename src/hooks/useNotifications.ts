@@ -21,10 +21,26 @@ export interface Notification {
 export function useNotifications() {
   const { transactions, loading } = useTransactions();
   const { isAdmin, user } = useAuth();
+  const [userMemberId, setUserMemberId] = useState<string | null>(null);
   const [readNotifications, setReadNotifications] = useState<Set<string>>(() => {
     const stored = localStorage.getItem('readNotifications');
     return stored ? new Set(JSON.parse(stored)) : new Set();
   });
+
+  // Fetch user's member ID for filtering
+  useEffect(() => {
+    const fetchMemberId = async () => {
+      if (!isAdmin && user?.id) {
+        const { data } = await supabase
+          .from('members')
+          .select('id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        setUserMemberId(data?.id || null);
+      }
+    };
+    fetchMemberId();
+  }, [isAdmin, user]);
 
   const notifications = useMemo(() => {
     const now = new Date();
