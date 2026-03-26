@@ -51,11 +51,10 @@ export default function ReturnBook() {
     fetchUserMember();
   }, [user, isAdmin]);
 
-  // Filter transactions based on role
-  const allIssuedTransactions = [...issuedTransactions, ...overdueTransactions];
+  // issuedTransactions already includes overdue ones (status === 'issued' || 'overdue')
   const filteredByRole = isAdmin 
-    ? allIssuedTransactions 
-    : allIssuedTransactions.filter(t => t.member_id === userMember?.id);
+    ? issuedTransactions 
+    : issuedTransactions.filter(t => t.member_id === userMember?.id);
   
   const filteredTransactions = filteredByRole.filter(t => 
     t.book?.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
