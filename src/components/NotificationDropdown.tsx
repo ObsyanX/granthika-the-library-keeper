@@ -8,8 +8,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useNotifications, Notification } from '@/hooks/useNotifications';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { useNotifications, Notification } from '@/hooks/useNotifications';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 
