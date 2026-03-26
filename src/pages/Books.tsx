@@ -156,10 +156,15 @@ export default function Books() {
         {/* Books Grid */}
         {!loading && filteredBooks.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filteredBooks.map((book) => (
-              <article 
-                key={book.id} 
-                className="group bg-card rounded-2xl border border-border p-5 hover:border-primary/50 hover:shadow-md transition-all duration-200"
+            {filteredBooks.map((book, index) => (
+              <motion.article 
+                key={book.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.04, type: "spring", stiffness: 300, damping: 24 }}
+                whileHover={{ y: -4, boxShadow: "0 12px 24px -8px hsl(var(--primary) / 0.12)" }}
+                whileTap={{ scale: 0.985 }}
+                className="group bg-card rounded-2xl border border-border p-5 hover:border-primary/50 transition-colors duration-200"
               >
                 {/* Header */}
                 <div className="flex items-start justify-between gap-3 mb-4">
