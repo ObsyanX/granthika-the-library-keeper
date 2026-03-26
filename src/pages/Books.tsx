@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Plus, Search, Edit, BookOpen, Film, Filter, X, CheckCircle, XCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
+import { MotionButton } from '@/components/ui/motion-button';
 import { Input } from '@/components/ui/input';
 import { useBooks } from '@/hooks/useBooks';
 import { Badge } from '@/components/ui/badge';
