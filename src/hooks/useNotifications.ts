@@ -88,10 +88,10 @@ export function useNotifications() {
         });
       }
 
-      // For users: show their own books that are due soon or overdue
-      // Note: In a real app, you'd match transaction.member.user_id with user.id
-      // For now, we'll show all due-soon notifications to non-admin users as examples
-      if (!isAdmin) {
+      // For users: only show their own transactions
+      if (!isAdmin && userMemberId) {
+        if (transaction.member_id !== userMemberId) return;
+        
         if (isOverdue) {
           notifs.push({
             id: `user-overdue-${transaction.id}`,
