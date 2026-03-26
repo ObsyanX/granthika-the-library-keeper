@@ -20,7 +20,6 @@ export default function AdminSettings() {
     setFineRate(getDailyFineRate().toString());
     setInitialized(true);
   }
-  const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
     const rate = parseInt(fineRate, 10);

@@ -16,7 +16,7 @@ import { Member } from '@/hooks/useMembers';
 
 export default function ReturnBook() {
   const navigate = useNavigate();
-  const { issuedTransactions, overdueTransactions, returnBook, loading } = useTransactions();
+  const { issuedTransactions, returnBook, loading } = useTransactions();
   const { books, updateBook } = useBooks();
   const { user, isAdmin } = useAuth();
   const { getDailyFineRate } = useSettings();
