@@ -239,7 +239,7 @@ export default function Books() {
                     Borrow This Item
                   </Button>
                 )}
-              </article>
+              </motion.article>
             ))}
           </div>
         )}
