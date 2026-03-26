@@ -62,7 +62,7 @@ export default function ReturnBook() {
     t.member?.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const selectedData = allIssuedTransactions.find(t => t.id === selectedTransaction);
+  const selectedData = issuedTransactions.find(t => t.id === selectedTransaction);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};

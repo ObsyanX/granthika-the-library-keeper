@@ -21,10 +21,10 @@ function NotificationItem({
   onMarkRead: (id: string) => void;
 }) {
   const Icon = notification.type === 'overdue' ? BookX : Clock;
-  const iconColor = notification.type === 'overdue' ? 'text-destructive' : 'text-warning';
+  const iconColor = notification.type === 'overdue' ? 'text-destructive' : 'text-secondary-foreground';
   const bgColor = notification.type === 'overdue' 
     ? 'bg-destructive/10 hover:bg-destructive/15' 
-    : 'bg-warning/10 hover:bg-warning/15';
+    : 'bg-secondary/10 hover:bg-secondary/15';
 
   return (
     <div
