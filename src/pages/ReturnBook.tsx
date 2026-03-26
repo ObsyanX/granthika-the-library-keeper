@@ -16,7 +16,7 @@ import { Member } from '@/hooks/useMembers';
 
 export default function ReturnBook() {
   const navigate = useNavigate();
-  const { issuedTransactions, overdueTransactions, returnBook, loading } = useTransactions();
+  const { issuedTransactions, returnBook, loading } = useTransactions();
   const { books, updateBook } = useBooks();
   const { user, isAdmin } = useAuth();
   const { getDailyFineRate } = useSettings();
@@ -51,11 +51,10 @@ export default function ReturnBook() {
     fetchUserMember();
   }, [user, isAdmin]);
 
-  // Filter transactions based on role
-  const allIssuedTransactions = [...issuedTransactions, ...overdueTransactions];
+  // issuedTransactions already includes overdue ones (status === 'issued' || 'overdue')
   const filteredByRole = isAdmin 
-    ? allIssuedTransactions 
-    : allIssuedTransactions.filter(t => t.member_id === userMember?.id);
+    ? issuedTransactions 
+    : issuedTransactions.filter(t => t.member_id === userMember?.id);
   
   const filteredTransactions = filteredByRole.filter(t => 
     t.book?.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -63,7 +62,7 @@ export default function ReturnBook() {
     t.member?.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const selectedData = allIssuedTransactions.find(t => t.id === selectedTransaction);
+  const selectedData = issuedTransactions.find(t => t.id === selectedTransaction);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};

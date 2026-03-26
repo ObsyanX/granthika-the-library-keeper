@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTransactions } from './useTransactions';
 import { useAuth } from '@/contexts/AuthContext';
-import { differenceInDays, parseISO, isAfter, isBefore, addDays } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
+import { differenceInDays, parseISO, isAfter } from 'date-fns';
 
 export interface Notification {
   id: string;
@@ -20,10 +21,26 @@ export interface Notification {
 export function useNotifications() {
   const { transactions, loading } = useTransactions();
   const { isAdmin, user } = useAuth();
+  const [userMemberId, setUserMemberId] = useState<string | null>(null);
   const [readNotifications, setReadNotifications] = useState<Set<string>>(() => {
     const stored = localStorage.getItem('readNotifications');
     return stored ? new Set(JSON.parse(stored)) : new Set();
   });
+
+  // Fetch user's member ID for filtering
+  useEffect(() => {
+    const fetchMemberId = async () => {
+      if (!isAdmin && user?.id) {
+        const { data } = await supabase
+          .from('members')
+          .select('id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        setUserMemberId(data?.id || null);
+      }
+    };
+    fetchMemberId();
+  }, [isAdmin, user]);
 
   const notifications = useMemo(() => {
     const now = new Date();
@@ -71,10 +88,10 @@ export function useNotifications() {
         });
       }
 
-      // For users: show their own books that are due soon or overdue
-      // Note: In a real app, you'd match transaction.member.user_id with user.id
-      // For now, we'll show all due-soon notifications to non-admin users as examples
-      if (!isAdmin) {
+      // For users: only show their own transactions
+      if (!isAdmin && userMemberId) {
+        if (transaction.member_id !== userMemberId) return;
+        
         if (isOverdue) {
           notifs.push({
             id: `user-overdue-${transaction.id}`,
@@ -109,7 +126,7 @@ export function useNotifications() {
       if (a.type !== 'overdue' && b.type === 'overdue') return 1;
       return b.createdAt.getTime() - a.createdAt.getTime();
     });
-  }, [transactions, isAdmin, readNotifications]);
+  }, [transactions, isAdmin, userMemberId, readNotifications]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
   const overdueCount = notifications.filter((n) => n.type === 'overdue').length;

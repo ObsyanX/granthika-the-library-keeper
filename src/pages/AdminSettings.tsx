@@ -11,8 +11,15 @@ import { useSettings } from '@/hooks/useSettings';
 export default function AdminSettings() {
   const navigate = useNavigate();
   const { getDailyFineRate, updateSetting, loading } = useSettings();
-  const [fineRate, setFineRate] = useState(getDailyFineRate().toString());
+  const [fineRate, setFineRate] = useState('');
+  const [initialized, setInitialized] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Initialize fineRate after settings have loaded
+  if (!initialized && !loading) {
+    setFineRate(getDailyFineRate().toString());
+    setInitialized(true);
+  }
 
   const handleSave = async () => {
     const rate = parseInt(fineRate, 10);

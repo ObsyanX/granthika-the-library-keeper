@@ -1,11 +1,9 @@
-import { Bell, BookX, Clock, Check, CheckCheck } from 'lucide-react';
+import { Bell, BookX, Clock, CheckCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -21,10 +19,10 @@ function NotificationItem({
   onMarkRead: (id: string) => void;
 }) {
   const Icon = notification.type === 'overdue' ? BookX : Clock;
-  const iconColor = notification.type === 'overdue' ? 'text-destructive' : 'text-warning';
+  const iconColor = notification.type === 'overdue' ? 'text-destructive' : 'text-secondary-foreground';
   const bgColor = notification.type === 'overdue' 
     ? 'bg-destructive/10 hover:bg-destructive/15' 
-    : 'bg-warning/10 hover:bg-warning/15';
+    : 'bg-secondary/10 hover:bg-secondary/15';
 
   return (
     <div
