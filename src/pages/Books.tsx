@@ -71,10 +71,10 @@ export default function Books() {
               </p>
             </div>
             {isAdmin && (
-              <Button onClick={() => navigate('/books/add')} className="gradient-primary text-primary-foreground rounded-xl shrink-0">
+              <MotionButton onClick={() => navigate('/books/add')} className="gradient-primary text-primary-foreground rounded-xl shrink-0">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Item
-              </Button>
+              </MotionButton>
             )}
           </div>
 
