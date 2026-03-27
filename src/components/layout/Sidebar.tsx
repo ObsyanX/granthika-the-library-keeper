@@ -1,19 +1,10 @@
 import { NavLink } from 'react-router-dom';
 import { 
-  Home, 
-  BookOpen, 
-  Users, 
-  RefreshCw, 
-  CreditCard,
-  ChevronLeft,
-  ChevronRight,
-  UserPlus,
-  PlusCircle,
-  Settings,
-  BarChart3,
-  User
+  Home, BookOpen, Users, RefreshCw, CreditCard, ChevronLeft, ChevronRight,
+  UserPlus, PlusCircle, Settings, BarChart3, User
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBasePath } from '@/hooks/useBasePath';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -57,12 +48,8 @@ function NavItem({ to, icon: Icon, label, collapsed, badge }: NavItemProps) {
   if (collapsed) {
     return (
       <Tooltip delayDuration={0}>
-        <TooltipTrigger asChild>
-          {content}
-        </TooltipTrigger>
-        <TooltipContent side="right" className="font-medium">
-          {label}
-        </TooltipContent>
+        <TooltipTrigger asChild>{content}</TooltipTrigger>
+        <TooltipContent side="right" className="font-medium">{label}</TooltipContent>
       </Tooltip>
     );
   }
@@ -92,6 +79,7 @@ function NavGroup({ title, children, collapsed }: NavGroupProps) {
 
 export function Sidebar() {
   const { isAdmin } = useAuth();
+  const p = useBasePath();
   const [collapsed, setCollapsed] = useState(false);
 
   return (
@@ -101,7 +89,6 @@ export function Sidebar() {
         collapsed ? 'w-[68px]' : 'w-60'
       )}
     >
-      {/* Toggle Button */}
       <button
         onClick={() => setCollapsed(!collapsed)}
         className="absolute -right-3 top-6 w-6 h-6 rounded-full bg-background border border-border text-muted-foreground flex items-center justify-center shadow-sm hover:bg-accent hover:text-foreground transition-colors z-10"
@@ -110,47 +97,41 @@ export function Sidebar() {
         {collapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
       </button>
 
-      <nav className="flex-1 p-3 space-y-4 overflow-y-auto scrollbar-thin">
-        {/* Overview */}
+      <nav className="flex-1 p-3 space-y-4 overflow-y-auto">
         <NavGroup title="Overview" collapsed={collapsed}>
-          <NavItem to={isAdmin ? "/admin" : "/user"} icon={Home} label="Dashboard" collapsed={collapsed} />
-          <NavItem to="/books" icon={BookOpen} label={isAdmin ? "Catalog" : "Books"} collapsed={collapsed} />
+          <NavItem to={p('/')} icon={Home} label="Dashboard" collapsed={collapsed} />
+          <NavItem to={p('/books')} icon={BookOpen} label={isAdmin ? "Catalog" : "Books"} collapsed={collapsed} />
         </NavGroup>
 
-        {/* Transactions */}
         <NavGroup title="Transactions" collapsed={collapsed}>
-          <NavItem to="/transactions" icon={RefreshCw} label={isAdmin ? "All Transactions" : "My Transactions"} collapsed={collapsed} />
-          <NavItem to="/transactions/issue" icon={PlusCircle} label={isAdmin ? "Issue Book" : "Borrow Book"} collapsed={collapsed} />
-          <NavItem to="/transactions/return" icon={RefreshCw} label="Return Book" collapsed={collapsed} />
-          <NavItem to="/transactions/fine" icon={CreditCard} label={isAdmin ? "Record Fine" : "Pay Fine"} collapsed={collapsed} />
+          <NavItem to={p('/transactions')} icon={RefreshCw} label={isAdmin ? "All Transactions" : "My Transactions"} collapsed={collapsed} />
+          <NavItem to={p('/transactions/issue')} icon={PlusCircle} label={isAdmin ? "Issue Book" : "Borrow Book"} collapsed={collapsed} />
+          <NavItem to={p('/transactions/return')} icon={RefreshCw} label="Return Book" collapsed={collapsed} />
+          <NavItem to={p('/transactions/fine')} icon={CreditCard} label={isAdmin ? "Record Fine" : "Pay Fine"} collapsed={collapsed} />
         </NavGroup>
 
-        {/* Membership (Admin Only) */}
         {isAdmin && (
           <NavGroup title="Members" collapsed={collapsed}>
-            <NavItem to="/membership" icon={Users} label="All Members" collapsed={collapsed} />
-            <NavItem to="/membership/add" icon={UserPlus} label="Add Member" collapsed={collapsed} />
+            <NavItem to={p('/membership')} icon={Users} label="All Members" collapsed={collapsed} />
+            <NavItem to={p('/membership/add')} icon={UserPlus} label="Add Member" collapsed={collapsed} />
           </NavGroup>
         )}
 
-        {/* Admin Only */}
         {isAdmin && (
           <NavGroup title="Administration" collapsed={collapsed}>
-            <NavItem to="/books/add" icon={PlusCircle} label="Add Book" collapsed={collapsed} />
-            <NavItem to="/users" icon={Users} label="User Accounts" collapsed={collapsed} />
-            <NavItem to="/admin/settings" icon={Settings} label="Settings" collapsed={collapsed} />
+            <NavItem to={p('/books/add')} icon={PlusCircle} label="Add Book" collapsed={collapsed} />
+            <NavItem to={p('/users')} icon={Users} label="User Accounts" collapsed={collapsed} />
+            <NavItem to={p('/settings')} icon={Settings} label="Settings" collapsed={collapsed} />
           </NavGroup>
         )}
 
-        {/* Reports */}
         <NavGroup title="Reports" collapsed={collapsed}>
-          <NavItem to="/reports" icon={BarChart3} label={isAdmin ? "All Reports" : "My Reports"} collapsed={collapsed} />
+          <NavItem to={p('/reports')} icon={BarChart3} label={isAdmin ? "All Reports" : "My Reports"} collapsed={collapsed} />
         </NavGroup>
 
-        {/* Account (User Only) */}
         {!isAdmin && (
           <NavGroup title="Account" collapsed={collapsed}>
-            <NavItem to="/profile" icon={User} label="Profile" collapsed={collapsed} />
+            <NavItem to={p('/profile')} icon={User} label="Profile" collapsed={collapsed} />
           </NavGroup>
         )}
       </nav>
