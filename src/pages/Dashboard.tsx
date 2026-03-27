@@ -2,6 +2,7 @@ import { BookOpen, Users, CreditCard, RefreshCw, FileText, TrendingUp, AlertTria
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBasePath } from '@/hooks/useBasePath';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useBooks } from '@/hooks/useBooks';
 import { useMembers } from '@/hooks/useMembers';
@@ -90,6 +91,7 @@ export default function Dashboard() {
   const { books, loading: booksLoading } = useBooks();
   const { activeMembers, loading: membersLoading } = useMembers();
   const { transactions, overdueTransactions, loading: transactionsLoading } = useTransactions();
+  const p = useBasePath();
 
   const loading = booksLoading || membersLoading || transactionsLoading;
 
@@ -134,22 +136,22 @@ export default function Dashboard() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard icon={BookOpen} label="Total Books" value={totalBooks} color="primary" onClick={() => navigate('/books')} index={0} />
-          <StatCard icon={CheckCircle} label="Available Copies" value={totalAvailableCopies} color="accent" onClick={() => navigate('/reports')} index={1} />
-          <StatCard icon={Users} label="Active Members" value={activeMembersCount} color="secondary" onClick={() => navigate('/membership')} index={2} />
-          <StatCard icon={AlertTriangle} label="Overdue" value={overdueCount} color="destructive" onClick={() => navigate('/reports')} index={3} />
+          <StatCard icon={BookOpen} label="Total Books" value={totalBooks} color="primary" onClick={() => navigate(p('/books'))} index={0} />
+          <StatCard icon={CheckCircle} label="Available Copies" value={totalAvailableCopies} color="accent" onClick={() => navigate(p('/reports'))} index={1} />
+          <StatCard icon={Users} label="Active Members" value={activeMembersCount} color="secondary" onClick={() => navigate(p('/membership'))} index={2} />
+          <StatCard icon={AlertTriangle} label="Overdue" value={overdueCount} color="destructive" onClick={() => navigate(p('/reports'))} index={3} />
         </div>
 
         {/* Quick Actions */}
         <div>
           <h2 className="font-display text-xl font-semibold text-foreground mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <QuickAction icon={BookOpen} label="Issue Book" description="Issue a book to a member" onClick={() => navigate('/transactions/issue')} index={0} />
-            <QuickAction icon={RefreshCw} label="Return Book" description="Process book returns" onClick={() => navigate('/transactions/return')} index={1} />
-            <QuickAction icon={FileText} label="View Reports" description="Access detailed reports" onClick={() => navigate('/reports')} index={2} />
-            <QuickAction icon={BookOpen} label="Add Book" description="Add new book to catalog" onClick={() => navigate('/books/add')} index={3} />
-            <QuickAction icon={Users} label="Add Member" description="Register new membership" onClick={() => navigate('/membership/add')} index={4} />
-            <QuickAction icon={CreditCard} label="Pay Fine" description="Process fine payments" onClick={() => navigate('/transactions/fine')} index={5} />
+            <QuickAction icon={BookOpen} label="Issue Book" description="Issue a book to a member" onClick={() => navigate(p('/transactions/issue'))} index={0} />
+            <QuickAction icon={RefreshCw} label="Return Book" description="Process book returns" onClick={() => navigate(p('/transactions/return'))} index={1} />
+            <QuickAction icon={FileText} label="View Reports" description="Access detailed reports" onClick={() => navigate(p('/reports'))} index={2} />
+            <QuickAction icon={BookOpen} label="Add Book" description="Add new book to catalog" onClick={() => navigate(p('/books/add'))} index={3} />
+            <QuickAction icon={Users} label="Add Member" description="Register new membership" onClick={() => navigate(p('/membership/add'))} index={4} />
+            <QuickAction icon={CreditCard} label="Pay Fine" description="Process fine payments" onClick={() => navigate(p('/transactions/fine'))} index={5} />
           </div>
         </div>
 

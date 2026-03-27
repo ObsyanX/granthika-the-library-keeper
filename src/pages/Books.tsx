@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBasePath } from '@/hooks/useBasePath';
 import { Button } from '@/components/ui/button';
 import { MotionButton } from '@/components/ui/motion-button';
 import { Input } from '@/components/ui/input';
@@ -26,6 +27,7 @@ export default function Books() {
   const [typeFilter, setTypeFilter] = useState<FilterType>('all');
   const [availabilityFilter, setAvailabilityFilter] = useState<AvailabilityFilter>('all');
   const { isAdmin } = useAuth();
+  const p = useBasePath();
   const navigate = useNavigate();
   const { books, loading } = useBooks();
 
@@ -71,7 +73,7 @@ export default function Books() {
               </p>
             </div>
             {isAdmin && (
-              <MotionButton onClick={() => navigate('/books/add')} className="gradient-primary text-primary-foreground rounded-xl shrink-0">
+              <MotionButton onClick={() => navigate(p('/books/add'))} className="gradient-primary text-primary-foreground rounded-xl shrink-0">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Item
               </MotionButton>
@@ -233,7 +235,7 @@ export default function Books() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => navigate('/transactions/issue')}
+                    onClick={() => navigate(p('/transactions/issue'))}
                     className="w-full mt-4 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     Borrow This Item
@@ -270,7 +272,7 @@ export default function Books() {
               The library catalog is empty. {isAdmin && 'Add your first book or movie to get started.'}
             </p>
             {isAdmin && (
-              <Button onClick={() => navigate('/books/add')} className="gradient-primary text-primary-foreground rounded-xl">
+              <Button onClick={() => navigate(p('/books/add'))} className="gradient-primary text-primary-foreground rounded-xl">
                 <Plus className="w-4 h-4 mr-2" />
                 Add First Item
               </Button>

@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { useBooks } from '@/hooks/useBooks';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBasePath } from '@/hooks/useBasePath';
 import { supabase } from '@/integrations/supabase/client';
 import { Member } from '@/hooks/useMembers';
 import { format } from 'date-fns';
@@ -40,6 +41,7 @@ export default function UserHome() {
   const navigate = useNavigate();
   const { books } = useBooks();
   const { user } = useAuth();
+  const p = useBasePath();
   const [userMember, setUserMember] = useState<Member | null>(null);
   const [userTransactions, setUserTransactions] = useState<TransactionWithBook[]>([]);
   const [loading, setLoading] = useState(true);
@@ -191,7 +193,7 @@ export default function UserHome() {
             <Button 
               variant="outline" 
               className="h-auto py-4 px-4 justify-start gap-3 rounded-xl hover:bg-primary/5 hover:border-primary/50"
-              onClick={() => navigate('/transactions/issue')}
+              onClick={() => navigate(p('/transactions/issue'))}
               disabled={!userMember}
             >
               <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shrink-0">
@@ -206,7 +208,7 @@ export default function UserHome() {
             <Button 
               variant="outline" 
               className="h-auto py-4 px-4 justify-start gap-3 rounded-xl hover:bg-accent/50"
-              onClick={() => navigate('/transactions/return')}
+              onClick={() => navigate(p('/transactions/return'))}
               disabled={!userMember}
             >
               <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center shrink-0">
@@ -221,7 +223,7 @@ export default function UserHome() {
             <Button 
               variant="outline" 
               className="h-auto py-4 px-4 justify-start gap-3 rounded-xl"
-              onClick={() => navigate('/books')}
+              onClick={() => navigate(p('/books'))}
             >
               <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shrink-0">
                 <BarChart3 className="w-5 h-5 text-foreground" />
@@ -236,7 +238,7 @@ export default function UserHome() {
               <Button 
                 variant="outline" 
                 className="h-auto py-4 px-4 justify-start gap-3 rounded-xl border-destructive/50 hover:bg-destructive/5"
-                onClick={() => navigate('/transactions/fine')}
+                onClick={() => navigate(p('/transactions/fine'))}
               >
                 <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center shrink-0">
                   <CreditCard className="w-5 h-5 text-destructive" />
@@ -255,7 +257,7 @@ export default function UserHome() {
           <section className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="font-display text-lg font-semibold text-foreground">Currently Borrowed</h2>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/reports?tab=issued')} className="text-primary">
+              <Button variant="ghost" size="sm" onClick={() => navigate(p('/reports') + '?tab=issued')} className="text-primary">
                 View All
                 <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
@@ -303,7 +305,7 @@ export default function UserHome() {
               <p className="text-sm text-muted-foreground mb-4 max-w-xs">
                 You don't have any books checked out. Browse our catalog to find something to read!
               </p>
-              <Button onClick={() => navigate('/books')} className="gradient-primary text-primary-foreground rounded-xl">
+              <Button onClick={() => navigate(p('/books'))} className="gradient-primary text-primary-foreground rounded-xl">
                 Browse Catalog
               </Button>
             </CardContent>

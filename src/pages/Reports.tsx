@@ -10,6 +10,7 @@ import { useMembers, Member } from '@/hooks/useMembers';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useIssueRequests } from '@/hooks/useIssueRequests';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBasePath } from '@/hooks/useBasePath';
 import { supabase } from '@/integrations/supabase/client';
 
 type ReportType = 'available' | 'movies' | 'issued' | 'members' | 'overdue' | 'duetoday' | 'pending' | 'myaccount' | 'history';
@@ -22,6 +23,7 @@ export default function Reports() {
   const { transactions, issuedTransactions, overdueTransactions } = useTransactions();
   const { pendingRequests } = useIssueRequests();
   const { user, isAdmin } = useAuth();
+  const p = useBasePath();
   const [userMember, setUserMember] = useState<Member | null>(null);
 
   // Fetch user's membership for non-admins
@@ -196,7 +198,7 @@ export default function Reports() {
                           </span>
                           <Button 
                             size="sm" 
-                            onClick={() => navigate('/transactions/fine')}
+                            onClick={() => navigate(p('/transactions/fine'))}
                             className="gradient-primary text-primary-foreground"
                           >
                             <CreditCard className="w-4 h-4 mr-1" />

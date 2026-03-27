@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { MotionButton } from '@/components/ui/motion-button';
+import { useBasePath } from '@/hooks/useBasePath';
 import { Input } from '@/components/ui/input';
 import { useMembers } from '@/hooks/useMembers';
 import { TableSkeleton } from '@/components/skeletons';
@@ -12,6 +13,7 @@ export default function Membership() {
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
   const { members, loading } = useMembers();
+  const p = useBasePath();
 
   const filteredMembers = members.filter(member =>
     member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -45,11 +47,11 @@ export default function Membership() {
             <p className="text-muted-foreground">Manage library memberships</p>
           </div>
           <div className="flex gap-2">
-            <MotionButton onClick={() => navigate('/membership/update')} variant="outline" className="rounded-xl">
+            <MotionButton onClick={() => navigate(p('/membership/update'))} variant="outline" className="rounded-xl">
               <Edit className="w-4 h-4 mr-2" />
               Update
             </MotionButton>
-            <MotionButton onClick={() => navigate('/membership/add')} className="gradient-primary text-primary-foreground rounded-xl">
+            <MotionButton onClick={() => navigate(p('/membership/add'))} className="gradient-primary text-primary-foreground rounded-xl">
               <Plus className="w-4 h-4 mr-2" />
               Add Membership
             </MotionButton>

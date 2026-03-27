@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useBooks } from '@/hooks/useBooks';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBasePath } from '@/hooks/useBasePath';
 import { useSettings } from '@/hooks/useSettings';
 import { supabase } from '@/integrations/supabase/client';
 import { Member } from '@/hooks/useMembers';
@@ -19,6 +20,7 @@ export default function ReturnBook() {
   const { issuedTransactions, returnBook, loading } = useTransactions();
   const { books, updateBook } = useBooks();
   const { user, isAdmin } = useAuth();
+  const p = useBasePath();
   const { getDailyFineRate } = useSettings();
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -103,7 +105,7 @@ export default function ReturnBook() {
       });
       
       // Always redirect to Pay Fine page after return (per Excel spec)
-      navigate('/transactions/fine', { state: { transactionId: selectedTransaction } });
+      navigate(p('/transactions/fine'), { state: { transactionId: selectedTransaction } });
     } catch (error: any) {
       toast.error('Failed to return book', { description: error.message });
     } finally {
@@ -126,7 +128,7 @@ export default function ReturnBook() {
     return (
       <DashboardLayout>
         <div className="max-w-4xl mx-auto animate-fade-in">
-          <Button variant="ghost" onClick={() => navigate('/transactions')} className="mb-6">
+          <Button variant="ghost" onClick={() => navigate(p('/transactions'))} className="mb-6">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Transactions
           </Button>
@@ -144,7 +146,7 @@ export default function ReturnBook() {
   return (
     <DashboardLayout>
       <div className="max-w-4xl mx-auto animate-fade-in">
-        <Button variant="ghost" onClick={() => navigate('/transactions')} className="mb-6">
+        <Button variant="ghost" onClick={() => navigate(p('/transactions'))} className="mb-6">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Transactions
         </Button>
@@ -274,7 +276,7 @@ export default function ReturnBook() {
               )}
 
               <div className="flex gap-4 pt-4">
-                <Button type="button" variant="outline" onClick={() => navigate('/transactions')} className="flex-1 h-12 rounded-xl">
+                <Button type="button" variant="outline" onClick={() => navigate(p('/transactions'))} className="flex-1 h-12 rounded-xl">
                   Cancel
                 </Button>
                 <Button onClick={handleConfirm} disabled={submitting} className="flex-1 h-12 rounded-xl gradient-primary text-primary-foreground">

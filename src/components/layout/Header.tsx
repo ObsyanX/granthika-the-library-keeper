@@ -1,23 +1,23 @@
 import { Moon, Sun, LogOut, BookOpen, Search } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBasePath } from '@/hooks/useBasePath';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { NotificationDropdown } from '@/components/NotificationDropdown';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function Header() {
   const { theme, toggleTheme } = useTheme();
   const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const p = useBasePath();
 
   const handleLogout = async () => {
     await logout();
@@ -25,25 +25,19 @@ export function Header() {
   };
 
   const openSearch = () => {
-    // Dispatch keyboard event to open global search
-    const event = new KeyboardEvent('keydown', {
-      key: 'k',
-      metaKey: true,
-      bubbles: true,
-    });
+    const event = new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true });
     document.dispatchEvent(event);
   };
 
   const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'User';
   const userInitials = userName.substring(0, 2).toUpperCase();
-  const homeLink = isAdmin ? '/admin' : '/user';
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link 
-          to={homeLink} 
+          to={p('/')} 
           className="flex items-center gap-3 hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg"
         >
           <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-sm">
@@ -72,43 +66,38 @@ export function Header() {
 
         {/* Actions */}
         <div className="flex items-center gap-2">
-          {/* Mobile Search */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={openSearch}
-            className="lg:hidden rounded-full"
-            aria-label="Search catalog"
-          >
+          <Button variant="ghost" size="icon" onClick={openSearch} className="lg:hidden rounded-full" aria-label="Search catalog">
             <Search className="w-5 h-5" />
           </Button>
 
-          {/* Notifications */}
           {user && <NotificationDropdown />}
 
-          {/* Theme Toggle */}
+          {/* Animated Theme Toggle */}
           <Button
             variant="ghost"
             size="icon"
             onClick={toggleTheme}
-            className="rounded-full"
+            className="rounded-full relative overflow-hidden"
             aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
           >
-            {theme === 'light' ? (
-              <Moon className="w-5 h-5" />
-            ) : (
-              <Sun className="w-5 h-5" />
-            )}
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={theme}
+                initial={{ y: -20, opacity: 0, rotate: -90 }}
+                animate={{ y: 0, opacity: 1, rotate: 0 }}
+                exit={{ y: 20, opacity: 0, rotate: 90 }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
+              >
+                {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+              </motion.div>
+            </AnimatePresence>
           </Button>
 
           {/* User Menu */}
           {user && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  className="relative h-10 gap-2 rounded-full pl-2 pr-3 hover:bg-muted"
-                >
+                <Button variant="ghost" className="relative h-10 gap-2 rounded-full pl-2 pr-3 hover:bg-muted">
                   <Avatar className="h-7 w-7">
                     <AvatarFallback className="bg-primary text-primary-foreground text-xs font-medium">
                       {userInitials}
@@ -118,9 +107,7 @@ export function Header() {
                     {userName}
                   </span>
                   {isAdmin && (
-                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
-                      Admin
-                    </Badge>
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">Admin</Badge>
                   )}
                 </Button>
               </DropdownMenuTrigger>
@@ -132,17 +119,14 @@ export function Header() {
                   </div>
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate(homeLink)} className="cursor-pointer">
+                <DropdownMenuItem onClick={() => navigate(p('/'))} className="cursor-pointer">
                   Dashboard
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/reports')} className="cursor-pointer">
+                <DropdownMenuItem onClick={() => navigate(p('/reports'))} className="cursor-pointer">
                   {isAdmin ? 'Reports' : 'My Account'}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem 
-                  onClick={handleLogout} 
-                  className="text-destructive focus:text-destructive cursor-pointer"
-                >
+                <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive cursor-pointer">
                   <LogOut className="w-4 h-4 mr-2" />
                   Sign out
                 </DropdownMenuItem>

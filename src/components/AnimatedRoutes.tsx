@@ -5,7 +5,7 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { PageLoadingSpinner } from '@/components/LoadingSpinner';
 import { PageTransition } from '@/components/PageTransition';
 
-// Lazy load all page components for better performance
+// Lazy load all page components
 const Index = lazy(() => import("@/pages/Index"));
 const Auth = lazy(() => import("@/pages/Auth"));
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
@@ -27,6 +27,15 @@ const AdminSettings = lazy(() => import("@/pages/AdminSettings"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
+// Helper to wrap with PageTransition + ProtectedRoute
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  return <ProtectedRoute requireAdmin><PageTransition>{children}</PageTransition></ProtectedRoute>;
+}
+
+function AuthRoute({ children }: { children: React.ReactNode }) {
+  return <ProtectedRoute><PageTransition>{children}</PageTransition></ProtectedRoute>;
+}
+
 export const AnimatedRoutes = () => {
   const location = useLocation();
 
@@ -38,41 +47,54 @@ export const AnimatedRoutes = () => {
           <Route path="/" element={<PageTransition><Index /></PageTransition>} />
           <Route path="/auth" element={<PageTransition><Auth /></PageTransition>} />
           
-          {/* Legacy Dashboard Route */}
-          <Route path="/dashboard" element={<ProtectedRoute><PageTransition><Dashboard /></PageTransition></ProtectedRoute>} />
-          
-          {/* Admin Dashboard */}
-          <Route path="/admin" element={<ProtectedRoute requireAdmin><PageTransition><AdminHome /></PageTransition></ProtectedRoute>} />
-          <Route path="/admin/settings" element={<ProtectedRoute requireAdmin><PageTransition><AdminSettings /></PageTransition></ProtectedRoute>} />
-          
-          {/* User Dashboard */}
-          <Route path="/user" element={<ProtectedRoute><PageTransition><UserHome /></PageTransition></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><PageTransition><Profile /></PageTransition></ProtectedRoute>} />
-          
-          {/* Books Module */}
-          <Route path="/books" element={<ProtectedRoute><PageTransition><Books /></PageTransition></ProtectedRoute>} />
-          <Route path="/books/add" element={<ProtectedRoute requireAdmin><PageTransition><AddBook /></PageTransition></ProtectedRoute>} />
-          <Route path="/books/edit/:serialNo" element={<ProtectedRoute requireAdmin><PageTransition><AddBook /></PageTransition></ProtectedRoute>} />
-          
-          {/* Transactions Module */}
-          <Route path="/transactions" element={<ProtectedRoute><PageTransition><Transactions /></PageTransition></ProtectedRoute>} />
-          <Route path="/transactions/search" element={<ProtectedRoute><PageTransition><BookAvailable /></PageTransition></ProtectedRoute>} />
-          <Route path="/transactions/issue" element={<ProtectedRoute><PageTransition><IssueBook /></PageTransition></ProtectedRoute>} />
-          <Route path="/transactions/return" element={<ProtectedRoute><PageTransition><ReturnBook /></PageTransition></ProtectedRoute>} />
-          <Route path="/transactions/fine" element={<ProtectedRoute><PageTransition><PayFine /></PageTransition></ProtectedRoute>} />
-          
-          {/* Membership Module (Admin Only) */}
-          <Route path="/membership" element={<ProtectedRoute requireAdmin><PageTransition><Membership /></PageTransition></ProtectedRoute>} />
-          <Route path="/membership/add" element={<ProtectedRoute requireAdmin><PageTransition><AddMembership /></PageTransition></ProtectedRoute>} />
-          <Route path="/membership/update" element={<ProtectedRoute requireAdmin><PageTransition><UpdateMembership /></PageTransition></ProtectedRoute>} />
-          <Route path="/membership/edit/:membershipNo" element={<ProtectedRoute requireAdmin><PageTransition><AddMembership /></PageTransition></ProtectedRoute>} />
-          
-          {/* Reports Module */}
-          <Route path="/reports" element={<ProtectedRoute><PageTransition><Reports /></PageTransition></ProtectedRoute>} />
-          
-          {/* User Management (Admin Only) */}
-          <Route path="/users" element={<ProtectedRoute requireAdmin><PageTransition><UserManagement /></PageTransition></ProtectedRoute>} />
-          
+          {/* ===== ADMIN ROUTES (/admin/*) ===== */}
+          <Route path="/admin" element={<AdminRoute><AdminHome /></AdminRoute>} />
+          <Route path="/admin/dashboard" element={<AdminRoute><Dashboard /></AdminRoute>} />
+          <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
+          <Route path="/admin/books" element={<AdminRoute><Books /></AdminRoute>} />
+          <Route path="/admin/books/add" element={<AdminRoute><AddBook /></AdminRoute>} />
+          <Route path="/admin/books/edit/:serialNo" element={<AdminRoute><AddBook /></AdminRoute>} />
+          <Route path="/admin/transactions" element={<AdminRoute><Transactions /></AdminRoute>} />
+          <Route path="/admin/transactions/search" element={<AdminRoute><BookAvailable /></AdminRoute>} />
+          <Route path="/admin/transactions/issue" element={<AdminRoute><IssueBook /></AdminRoute>} />
+          <Route path="/admin/transactions/return" element={<AdminRoute><ReturnBook /></AdminRoute>} />
+          <Route path="/admin/transactions/fine" element={<AdminRoute><PayFine /></AdminRoute>} />
+          <Route path="/admin/membership" element={<AdminRoute><Membership /></AdminRoute>} />
+          <Route path="/admin/membership/add" element={<AdminRoute><AddMembership /></AdminRoute>} />
+          <Route path="/admin/membership/update" element={<AdminRoute><UpdateMembership /></AdminRoute>} />
+          <Route path="/admin/membership/edit/:membershipNo" element={<AdminRoute><AddMembership /></AdminRoute>} />
+          <Route path="/admin/reports" element={<AdminRoute><Reports /></AdminRoute>} />
+          <Route path="/admin/users" element={<AdminRoute><UserManagement /></AdminRoute>} />
+          <Route path="/admin/profile" element={<AdminRoute><Profile /></AdminRoute>} />
+
+          {/* ===== USER ROUTES (/user/*) ===== */}
+          <Route path="/user" element={<AuthRoute><UserHome /></AuthRoute>} />
+          <Route path="/user/dashboard" element={<AuthRoute><Dashboard /></AuthRoute>} />
+          <Route path="/user/books" element={<AuthRoute><Books /></AuthRoute>} />
+          <Route path="/user/transactions" element={<AuthRoute><Transactions /></AuthRoute>} />
+          <Route path="/user/transactions/search" element={<AuthRoute><BookAvailable /></AuthRoute>} />
+          <Route path="/user/transactions/issue" element={<AuthRoute><IssueBook /></AuthRoute>} />
+          <Route path="/user/transactions/return" element={<AuthRoute><ReturnBook /></AuthRoute>} />
+          <Route path="/user/transactions/fine" element={<AuthRoute><PayFine /></AuthRoute>} />
+          <Route path="/user/reports" element={<AuthRoute><Reports /></AuthRoute>} />
+          <Route path="/user/profile" element={<AuthRoute><Profile /></AuthRoute>} />
+
+          {/* Legacy fallback routes - redirect to role-based paths */}
+          <Route path="/dashboard" element={<AuthRoute><Dashboard /></AuthRoute>} />
+          <Route path="/books" element={<AuthRoute><Books /></AuthRoute>} />
+          <Route path="/transactions" element={<AuthRoute><Transactions /></AuthRoute>} />
+          <Route path="/transactions/issue" element={<AuthRoute><IssueBook /></AuthRoute>} />
+          <Route path="/transactions/return" element={<AuthRoute><ReturnBook /></AuthRoute>} />
+          <Route path="/transactions/fine" element={<AuthRoute><PayFine /></AuthRoute>} />
+          <Route path="/reports" element={<AuthRoute><Reports /></AuthRoute>} />
+          <Route path="/profile" element={<AuthRoute><Profile /></AuthRoute>} />
+          <Route path="/membership" element={<AdminRoute><Membership /></AdminRoute>} />
+          <Route path="/membership/add" element={<AdminRoute><AddMembership /></AdminRoute>} />
+          <Route path="/membership/update" element={<AdminRoute><UpdateMembership /></AdminRoute>} />
+          <Route path="/users" element={<AdminRoute><UserManagement /></AdminRoute>} />
+          <Route path="/books/add" element={<AdminRoute><AddBook /></AdminRoute>} />
+          <Route path="/books/edit/:serialNo" element={<AdminRoute><AddBook /></AdminRoute>} />
+
           {/* 404 */}
           <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
         </Routes>

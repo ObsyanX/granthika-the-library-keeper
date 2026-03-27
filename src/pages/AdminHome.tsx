@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useBooks } from '@/hooks/useBooks';
 import { useMembers } from '@/hooks/useMembers';
 import { useTransactions } from '@/hooks/useTransactions';
+import { useBasePath } from '@/hooks/useBasePath';
 import { format } from 'date-fns';
 import { StatsGridSkeleton } from '@/components/skeletons';
 
@@ -21,6 +22,7 @@ const categoryCodeRanges = [
 
 export default function AdminHome() {
   const navigate = useNavigate();
+  const p = useBasePath();
   const { books, loading: booksLoading } = useBooks();
   const { members, activeMembers, loading: membersLoading } = useMembers();
   const { transactions, issuedTransactions, overdueTransactions, loading: transactionsLoading } = useTransactions();
@@ -160,7 +162,7 @@ export default function AdminHome() {
               <Button 
                 variant="outline" 
                 className="w-full justify-between rounded-xl h-12"
-                onClick={() => navigate('/reports?tab=available')}
+                onClick={() => navigate(p('/reports') + '?tab=available')}
               >
                 <span className="flex items-center gap-2">
                   <BookOpen className="w-4 h-4" />
@@ -171,7 +173,7 @@ export default function AdminHome() {
               <Button 
                 variant="outline" 
                 className="w-full justify-between rounded-xl h-12"
-                onClick={() => navigate('/reports?tab=members')}
+                onClick={() => navigate(p('/reports') + '?tab=members')}
               >
                 <span className="flex items-center gap-2">
                   <Users className="w-4 h-4" />
@@ -182,7 +184,7 @@ export default function AdminHome() {
               <Button 
                 variant="outline" 
                 className="w-full justify-between rounded-xl h-12"
-                onClick={() => navigate('/reports?tab=overdue')}
+                onClick={() => navigate(p('/reports') + '?tab=overdue')}
               >
                 <span className="flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-destructive" />
@@ -193,7 +195,7 @@ export default function AdminHome() {
               <Button 
                 variant="outline" 
                 className="w-full justify-between rounded-xl h-12"
-                onClick={() => navigate('/reports?tab=pending')}
+                onClick={() => navigate(p('/reports') + '?tab=pending')}
               >
                 <span className="flex items-center gap-2">
                   <FileText className="w-4 h-4" />
@@ -217,7 +219,7 @@ export default function AdminHome() {
               <Button 
                 variant="outline" 
                 className="w-full justify-between rounded-xl h-12"
-                onClick={() => navigate('/books')}
+                onClick={() => navigate(p('/books'))}
               >
                 <span className="flex items-center gap-2">
                   <BookOpen className="w-4 h-4" />
@@ -228,7 +230,7 @@ export default function AdminHome() {
               <Button 
                 variant="outline" 
                 className="w-full justify-between rounded-xl h-12"
-                onClick={() => navigate('/membership')}
+                onClick={() => navigate(p('/membership'))}
               >
                 <span className="flex items-center gap-2">
                   <Users className="w-4 h-4" />
@@ -239,7 +241,7 @@ export default function AdminHome() {
               <Button 
                 variant="outline" 
                 className="w-full justify-between rounded-xl h-12"
-                onClick={() => navigate('/users')}
+                onClick={() => navigate(p('/users'))}
               >
                 <span className="flex items-center gap-2">
                   <Users className="w-4 h-4" />
@@ -250,7 +252,7 @@ export default function AdminHome() {
               <Button 
                 variant="outline" 
                 className="w-full justify-between rounded-xl h-12"
-                onClick={() => navigate('/admin/settings')}
+                onClick={() => navigate(p('/settings'))}
               >
                 <span className="flex items-center gap-2">
                   <Settings className="w-4 h-4" />

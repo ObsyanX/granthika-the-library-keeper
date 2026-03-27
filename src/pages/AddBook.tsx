@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useBooks } from '@/hooks/useBooks';
+import { useBasePath } from '@/hooks/useBasePath';
 
 const genres = [
   'Science',
@@ -31,6 +32,7 @@ export default function AddBook() {
   const { serialNo: editSerialNo } = useParams();
   const isEditMode = Boolean(editSerialNo);
   const { addBook, updateBook, getBookBySerialNo, books } = useBooks();
+  const p = useBasePath();
 
   const [type, setType] = useState<'book' | 'movie'>('book');
   const [formData, setFormData] = useState({
@@ -142,7 +144,7 @@ export default function AddBook() {
           description: `"${formData.title}" has been added to the catalog`,
         });
       }
-      navigate('/books');
+      navigate(p('/books'));
     } catch (err: any) {
       toast.error('Error saving book', { description: err.message });
     } finally {
@@ -153,7 +155,7 @@ export default function AddBook() {
   return (
     <DashboardLayout>
       <div className="max-w-2xl mx-auto animate-fade-in">
-        <Button variant="ghost" onClick={() => navigate('/books')} className="mb-6">
+        <Button variant="ghost" onClick={() => navigate(p('/books'))} className="mb-6">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Catalog
         </Button>
@@ -289,7 +291,7 @@ export default function AddBook() {
             </div>
 
             <div className="flex gap-4 pt-4">
-              <Button type="button" variant="outline" onClick={() => navigate('/books')} className="flex-1 h-12 rounded-xl">
+              <Button type="button" variant="outline" onClick={() => navigate(p('/books'))} className="flex-1 h-12 rounded-xl">
                 Cancel
               </Button>
               <Button 
