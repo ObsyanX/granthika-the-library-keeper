@@ -2,6 +2,7 @@ import { BookOpen, Users, CreditCard, RefreshCw, FileText, TrendingUp, AlertTria
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBasePath } from '@/hooks/useBasePath';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useBooks } from '@/hooks/useBooks';
 import { useMembers } from '@/hooks/useMembers';
