@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { MotionButton } from '@/components/ui/motion-button';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useMembers } from '@/hooks/useMembers';
 import { TableSkeleton } from '@/components/skeletons';

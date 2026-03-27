@@ -108,9 +108,7 @@ export default function Dashboard() {
             <div className="h-8 w-64 bg-muted rounded animate-pulse mb-2" />
             <div className="h-4 w-48 bg-muted rounded animate-pulse" />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <CardSkeleton count={4} />
-          </div>
+          <StatsGridSkeleton count={4} />
           <TableSkeleton rows={5} columns={5} />
         </div>
       </DashboardLayout>
