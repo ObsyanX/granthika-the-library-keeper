@@ -198,7 +198,7 @@ export default function Reports() {
                           </span>
                           <Button 
                             size="sm" 
-                            onClick={() => navigate(p('/transactions/fine')}
+                            onClick={() => navigate(p('/transactions/fine'))}
                             className="gradient-primary text-primary-foreground"
                           >
                             <CreditCard className="w-4 h-4 mr-1" />

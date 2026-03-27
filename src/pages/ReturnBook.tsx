@@ -105,7 +105,7 @@ export default function ReturnBook() {
       });
       
       // Always redirect to Pay Fine page after return (per Excel spec)
-      navigate(p('/transactions/fine', { state: { transactionId: selectedTransaction } });
+      navigate(p('/transactions/fine'), { state: { transactionId: selectedTransaction } });
     } catch (error: any) {
       toast.error('Failed to return book', { description: error.message });
     } finally {

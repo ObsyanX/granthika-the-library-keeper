@@ -238,7 +238,7 @@ export default function UserHome() {
               <Button 
                 variant="outline" 
                 className="h-auto py-4 px-4 justify-start gap-3 rounded-xl border-destructive/50 hover:bg-destructive/5"
-                onClick={() => navigate(p('/transactions/fine')}
+                onClick={() => navigate(p('/transactions/fine'))}
               >
                 <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center shrink-0">
                   <CreditCard className="w-5 h-5 text-destructive" />
