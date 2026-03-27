@@ -1,16 +1,11 @@
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronRight, Home } from 'lucide-react';
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
+  Breadcrumb, BreadcrumbItem, BreadcrumbLink,
+  BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { useAuth } from '@/contexts/AuthContext';
 
-// Route label mappings for human-readable breadcrumbs
 const routeLabels: Record<string, string> = {
   admin: 'Dashboard',
   user: 'Dashboard',
@@ -28,21 +23,7 @@ const routeLabels: Record<string, string> = {
   users: 'User Management',
   settings: 'Settings',
   profile: 'Profile',
-  auth: 'Login',
-};
-
-// Parent route mappings for proper hierarchy
-const routeParents: Record<string, string> = {
-  '/books/add': '/books',
-  '/books/edit': '/books',
-  '/transactions/search': '/transactions',
-  '/transactions/issue': '/transactions',
-  '/transactions/return': '/transactions',
-  '/transactions/fine': '/transactions',
-  '/membership/add': '/membership',
-  '/membership/update': '/membership',
-  '/membership/edit': '/membership',
-  '/admin/settings': '/admin',
+  dashboard: 'Dashboard',
 };
 
 interface BreadcrumbSegment {
@@ -55,9 +36,10 @@ export function Breadcrumbs() {
   const location = useLocation();
   const { isAdmin } = useAuth();
 
+  const homePath = isAdmin ? '/admin' : '/user';
+  
   // Don't show breadcrumbs on root, auth, or home pages
-  const hiddenPaths = ['/', '/auth', '/admin', '/user'];
-  if (hiddenPaths.includes(location.pathname)) {
+  if (['/', '/auth', '/admin', '/user'].includes(location.pathname)) {
     return null;
   }
 
@@ -65,13 +47,7 @@ export function Breadcrumbs() {
     const pathSegments = location.pathname.split('/').filter(Boolean);
     const breadcrumbs: BreadcrumbSegment[] = [];
     
-    // Add home
-    const homePath = isAdmin ? '/admin' : '/user';
-    breadcrumbs.push({
-      label: 'Home',
-      path: homePath,
-      isLast: false,
-    });
+    breadcrumbs.push({ label: 'Home', path: homePath, isLast: false });
 
     let currentPath = '';
     
@@ -79,36 +55,23 @@ export function Breadcrumbs() {
       currentPath += `/${segment}`;
       const isLast = index === pathSegments.length - 1;
       
-      // Skip if this is the home path segment (admin/user)
-      if (segment === 'admin' || segment === 'user') {
+      // Skip the role prefix (admin/user) as it's represented by "Home"
+      if (index === 0 && (segment === 'admin' || segment === 'user')) {
         return;
       }
       
-      // Check if segment is a dynamic parameter (UUID or ID)
       const isDynamicSegment = /^[0-9a-f-]{36}$/i.test(segment) || /^\d+$/.test(segment);
-      
       let label = routeLabels[segment] || segment.charAt(0).toUpperCase() + segment.slice(1);
-      
-      if (isDynamicSegment) {
-        // For dynamic segments, use a generic label
-        label = 'Details';
-      }
+      if (isDynamicSegment) label = 'Details';
 
-      breadcrumbs.push({
-        label,
-        path: currentPath,
-        isLast,
-      });
+      breadcrumbs.push({ label, path: currentPath, isLast });
     });
 
     return breadcrumbs;
   };
 
   const breadcrumbs = generateBreadcrumbs();
-
-  if (breadcrumbs.length <= 1) {
-    return null;
-  }
+  if (breadcrumbs.length <= 1) return null;
 
   return (
     <div className="mb-4">
