@@ -87,9 +87,9 @@ export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   
-  const { books, availableBooks, loading: booksLoading } = useBooks();
+  const { books, loading: booksLoading } = useBooks();
   const { activeMembers, loading: membersLoading } = useMembers();
-  const { transactions, issuedTransactions, overdueTransactions, loading: transactionsLoading } = useTransactions();
+  const { transactions, overdueTransactions, loading: transactionsLoading } = useTransactions();
 
   const loading = booksLoading || membersLoading || transactionsLoading;
 
