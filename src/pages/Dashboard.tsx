@@ -146,12 +146,12 @@ export default function Dashboard() {
         <div>
           <h2 className="font-display text-xl font-semibold text-foreground mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <QuickAction icon={BookOpen} label="Issue Book" description="Issue a book to a member" onClick={() => navigate('/transactions/issue')} index={0} />
-            <QuickAction icon={RefreshCw} label="Return Book" description="Process book returns" onClick={() => navigate('/transactions/return')} index={1} />
-            <QuickAction icon={FileText} label="View Reports" description="Access detailed reports" onClick={() => navigate('/reports')} index={2} />
-            <QuickAction icon={BookOpen} label="Add Book" description="Add new book to catalog" onClick={() => navigate('/books/add')} index={3} />
-            <QuickAction icon={Users} label="Add Member" description="Register new membership" onClick={() => navigate('/membership/add')} index={4} />
-            <QuickAction icon={CreditCard} label="Pay Fine" description="Process fine payments" onClick={() => navigate('/transactions/fine')} index={5} />
+            <QuickAction icon={BookOpen} label="Issue Book" description="Issue a book to a member" onClick={() => navigate(p('/transactions/issue'))} index={0} />
+            <QuickAction icon={RefreshCw} label="Return Book" description="Process book returns" onClick={() => navigate(p('/transactions/return'))} index={1} />
+            <QuickAction icon={FileText} label="View Reports" description="Access detailed reports" onClick={() => navigate(p('/reports'))} index={2} />
+            <QuickAction icon={BookOpen} label="Add Book" description="Add new book to catalog" onClick={() => navigate(p('/books/add'))} index={3} />
+            <QuickAction icon={Users} label="Add Member" description="Register new membership" onClick={() => navigate(p('/membership/add'))} index={4} />
+            <QuickAction icon={CreditCard} label="Pay Fine" description="Process fine payments" onClick={() => navigate(p('/transactions/fine'))} index={5} />
           </div>
         </div>
 
