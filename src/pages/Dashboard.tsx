@@ -136,10 +136,10 @@ export default function Dashboard() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard icon={BookOpen} label="Total Books" value={totalBooks} color="primary" onClick={() => navigate('/books')} index={0} />
-          <StatCard icon={CheckCircle} label="Available Copies" value={totalAvailableCopies} color="accent" onClick={() => navigate('/reports')} index={1} />
-          <StatCard icon={Users} label="Active Members" value={activeMembersCount} color="secondary" onClick={() => navigate('/membership')} index={2} />
-          <StatCard icon={AlertTriangle} label="Overdue" value={overdueCount} color="destructive" onClick={() => navigate('/reports')} index={3} />
+          <StatCard icon={BookOpen} label="Total Books" value={totalBooks} color="primary" onClick={() => navigate(p('/books'))} index={0} />
+          <StatCard icon={CheckCircle} label="Available Copies" value={totalAvailableCopies} color="accent" onClick={() => navigate(p('/reports'))} index={1} />
+          <StatCard icon={Users} label="Active Members" value={activeMembersCount} color="secondary" onClick={() => navigate(p('/membership'))} index={2} />
+          <StatCard icon={AlertTriangle} label="Overdue" value={overdueCount} color="destructive" onClick={() => navigate(p('/reports'))} index={3} />
         </div>
 
         {/* Quick Actions */}
