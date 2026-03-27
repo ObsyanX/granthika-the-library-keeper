@@ -6,7 +6,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useBooks } from '@/hooks/useBooks';
 import { useMembers } from '@/hooks/useMembers';
 import { useTransactions } from '@/hooks/useTransactions';
-import { CardSkeleton, TableSkeleton } from '@/components/skeletons';
+import { StatsGridSkeleton, TableSkeleton } from '@/components/skeletons';
 
 interface StatCardProps {
   icon: React.ElementType;
