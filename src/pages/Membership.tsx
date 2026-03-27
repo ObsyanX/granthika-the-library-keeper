@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { Plus, Search, Edit, Users, Loader2 } from 'lucide-react';
+import { Plus, Search, Edit, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { Button } from '@/components/ui/button';
+import { MotionButton } from '@/components/ui/motion-button';
 import { Input } from '@/components/ui/input';
 import { useMembers } from '@/hooks/useMembers';
+import { TableSkeleton } from '@/components/skeletons';
 
 export default function Membership() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -20,8 +22,14 @@ export default function Membership() {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <div className="space-y-6">
+          <div className="flex justify-between">
+            <div>
+              <div className="h-7 w-64 bg-muted rounded animate-pulse mb-2" />
+              <div className="h-4 w-48 bg-muted rounded animate-pulse" />
+            </div>
+          </div>
+          <TableSkeleton rows={6} columns={5} />
         </div>
       </DashboardLayout>
     );
@@ -37,14 +45,14 @@ export default function Membership() {
             <p className="text-muted-foreground">Manage library memberships</p>
           </div>
           <div className="flex gap-2">
-            <Button onClick={() => navigate('/membership/update')} variant="outline" className="rounded-xl">
+            <MotionButton onClick={() => navigate('/membership/update')} variant="outline" className="rounded-xl">
               <Edit className="w-4 h-4 mr-2" />
               Update
-            </Button>
-            <Button onClick={() => navigate('/membership/add')} className="gradient-primary text-primary-foreground rounded-xl">
+            </MotionButton>
+            <MotionButton onClick={() => navigate('/membership/add')} className="gradient-primary text-primary-foreground rounded-xl">
               <Plus className="w-4 h-4 mr-2" />
               Add Membership
-            </Button>
+            </MotionButton>
           </div>
         </div>
 
@@ -74,8 +82,14 @@ export default function Membership() {
                 </tr>
               </thead>
               <tbody>
-                {filteredMembers.map((member) => (
-                  <tr key={member.id} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
+                {filteredMembers.map((member, index) => (
+                  <motion.tr
+                    key={member.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05, type: "spring", stiffness: 300, damping: 24 }}
+                    className="border-b border-border/50 hover:bg-muted/50 transition-colors"
+                  >
                     <td className="py-4 px-6">
                       <p className="font-medium text-foreground">{member.name}</p>
                       <p className="text-sm text-muted-foreground">{member.email}</p>
@@ -94,7 +108,7 @@ export default function Membership() {
                         {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
                       </span>
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))}
               </tbody>
             </table>
