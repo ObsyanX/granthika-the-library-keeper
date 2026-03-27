@@ -1,10 +1,12 @@
 import { BookOpen, Users, CreditCard, RefreshCw, FileText, TrendingUp, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useBooks } from '@/hooks/useBooks';
 import { useMembers } from '@/hooks/useMembers';
 import { useTransactions } from '@/hooks/useTransactions';
+import { CardSkeleton, TableSkeleton } from '@/components/skeletons';
 
 interface StatCardProps {
   icon: React.ElementType;
@@ -13,9 +15,10 @@ interface StatCardProps {
   trend?: string;
   color: 'primary' | 'secondary' | 'accent' | 'destructive';
   onClick?: () => void;
+  index: number;
 }
 
-function StatCard({ icon: Icon, label, value, trend, color, onClick }: StatCardProps) {
+function StatCard({ icon: Icon, label, value, trend, color, onClick, index }: StatCardProps) {
   const iconBgClasses = {
     primary: 'bg-primary/10 text-primary',
     secondary: 'bg-secondary/20 text-secondary-foreground',
@@ -24,7 +27,12 @@ function StatCard({ icon: Icon, label, value, trend, color, onClick }: StatCardP
   };
 
   return (
-    <button
+    <motion.button
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.08, type: "spring", stiffness: 300, damping: 24 }}
+      whileHover={{ y: -4, boxShadow: "0 12px 24px -8px hsl(var(--primary) / 0.12)" }}
+      whileTap={{ scale: 0.985 }}
       onClick={onClick}
       className="neu-card bg-card rounded-2xl p-6 text-left w-full group"
     >
@@ -41,7 +49,7 @@ function StatCard({ icon: Icon, label, value, trend, color, onClick }: StatCardP
       </div>
       <p className="text-3xl font-bold font-display text-foreground mb-1">{value}</p>
       <p className="text-muted-foreground text-sm">{label}</p>
-    </button>
+    </motion.button>
   );
 }
 
@@ -50,11 +58,17 @@ interface QuickActionProps {
   label: string;
   description: string;
   onClick: () => void;
+  index: number;
 }
 
-function QuickAction({ icon: Icon, label, description, onClick }: QuickActionProps) {
+function QuickAction({ icon: Icon, label, description, onClick, index }: QuickActionProps) {
   return (
-    <button
+    <motion.button
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3 + index * 0.06, type: "spring", stiffness: 300, damping: 24 }}
+      whileHover={{ y: -3, boxShadow: "0 8px 20px -6px hsl(var(--primary) / 0.1)" }}
+      whileTap={{ scale: 0.97 }}
       onClick={onClick}
       className="neu-card bg-card rounded-2xl p-5 text-left w-full flex items-center gap-4 group"
     >
@@ -65,7 +79,7 @@ function QuickAction({ icon: Icon, label, description, onClick }: QuickActionPro
         <p className="font-semibold text-foreground">{label}</p>
         <p className="text-sm text-muted-foreground">{description}</p>
       </div>
-    </button>
+    </motion.button>
   );
 }
 
@@ -89,8 +103,15 @@ export default function Dashboard() {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <div className="space-y-8">
+          <div>
+            <div className="h-8 w-64 bg-muted rounded animate-pulse mb-2" />
+            <div className="h-4 w-48 bg-muted rounded animate-pulse" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <CardSkeleton count={4} />
+          </div>
+          <TableSkeleton rows={5} columns={5} />
         </div>
       </DashboardLayout>
     );
@@ -100,87 +121,37 @@ export default function Dashboard() {
     <DashboardLayout>
       <div className="space-y-8">
         {/* Welcome Section */}
-        <div className="animate-fade-in">
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
           <h1 className="font-display text-3xl font-bold text-foreground">
             Namaste, {userName}! 🙏
           </h1>
           <p className="text-muted-foreground mt-1">
             Welcome to your dashboard
           </p>
-        </div>
+        </motion.div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard
-            icon={BookOpen}
-            label="Total Books"
-            value={totalBooks}
-            color="primary"
-            onClick={() => navigate('/books')}
-          />
-          <StatCard
-            icon={CheckCircle}
-            label="Available Copies"
-            value={totalAvailableCopies}
-            color="accent"
-            onClick={() => navigate('/reports')}
-          />
-          <StatCard
-            icon={Users}
-            label="Active Members"
-            value={activeMembersCount}
-            color="secondary"
-            onClick={() => navigate('/membership')}
-          />
-          <StatCard
-            icon={AlertTriangle}
-            label="Overdue"
-            value={overdueCount}
-            color="destructive"
-            onClick={() => navigate('/reports')}
-          />
+          <StatCard icon={BookOpen} label="Total Books" value={totalBooks} color="primary" onClick={() => navigate('/books')} index={0} />
+          <StatCard icon={CheckCircle} label="Available Copies" value={totalAvailableCopies} color="accent" onClick={() => navigate('/reports')} index={1} />
+          <StatCard icon={Users} label="Active Members" value={activeMembersCount} color="secondary" onClick={() => navigate('/membership')} index={2} />
+          <StatCard icon={AlertTriangle} label="Overdue" value={overdueCount} color="destructive" onClick={() => navigate('/reports')} index={3} />
         </div>
 
         {/* Quick Actions */}
         <div>
           <h2 className="font-display text-xl font-semibold text-foreground mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <QuickAction
-              icon={BookOpen}
-              label="Issue Book"
-              description="Issue a book to a member"
-              onClick={() => navigate('/transactions/issue')}
-            />
-            <QuickAction
-              icon={RefreshCw}
-              label="Return Book"
-              description="Process book returns"
-              onClick={() => navigate('/transactions/return')}
-            />
-            <QuickAction
-              icon={FileText}
-              label="View Reports"
-              description="Access detailed reports"
-              onClick={() => navigate('/reports')}
-            />
-            <QuickAction
-              icon={BookOpen}
-              label="Add Book"
-              description="Add new book to catalog"
-              onClick={() => navigate('/books/add')}
-            />
-            <QuickAction
-              icon={Users}
-              label="Add Member"
-              description="Register new membership"
-              onClick={() => navigate('/membership/add')}
-            />
-            <QuickAction
-              icon={CreditCard}
-              label="Pay Fine"
-              description="Process fine payments"
-              onClick={() => navigate('/transactions/fine')}
-            />
+            <QuickAction icon={BookOpen} label="Issue Book" description="Issue a book to a member" onClick={() => navigate('/transactions/issue')} index={0} />
+            <QuickAction icon={RefreshCw} label="Return Book" description="Process book returns" onClick={() => navigate('/transactions/return')} index={1} />
+            <QuickAction icon={FileText} label="View Reports" description="Access detailed reports" onClick={() => navigate('/reports')} index={2} />
+            <QuickAction icon={BookOpen} label="Add Book" description="Add new book to catalog" onClick={() => navigate('/books/add')} index={3} />
+            <QuickAction icon={Users} label="Add Member" description="Register new membership" onClick={() => navigate('/membership/add')} index={4} />
+            <QuickAction icon={CreditCard} label="Pay Fine" description="Process fine payments" onClick={() => navigate('/transactions/fine')} index={5} />
           </div>
         </div>
 
@@ -200,8 +171,14 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {transactions.slice(0, 5).map((transaction) => (
-                    <tr key={transaction.id} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
+                  {transactions.slice(0, 5).map((transaction, index) => (
+                    <motion.tr
+                      key={transaction.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.5 + index * 0.06 }}
+                      className="border-b border-border/50 hover:bg-muted/50 transition-colors"
+                    >
                       <td className="py-4 px-6">
                         <p className="font-medium text-foreground">{transaction.book?.title || 'Unknown'}</p>
                         <p className="text-sm text-muted-foreground">{transaction.book?.author || ''}</p>
@@ -218,7 +195,7 @@ export default function Dashboard() {
                           {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
                         </span>
                       </td>
-                    </tr>
+                    </motion.tr>
                   ))}
                   {transactions.length === 0 && (
                     <tr>

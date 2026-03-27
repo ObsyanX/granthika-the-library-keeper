@@ -1,8 +1,9 @@
 import { BookOpen, RefreshCw, CreditCard, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function Transactions() {
   const navigate = useNavigate();
@@ -45,10 +46,15 @@ export default function Transactions() {
         </section>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {actions.map((action) => (
-            <Card 
+          {actions.map((action, index) => (
+            <motion.div
               key={action.path}
-              className="group cursor-pointer hover:border-primary/50 hover:shadow-md transition-all duration-200"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1, type: "spring", stiffness: 300, damping: 24 }}
+              whileHover={{ y: -4, boxShadow: "0 12px 24px -8px hsl(var(--primary) / 0.12)" }}
+              whileTap={{ scale: 0.985 }}
+              className="group cursor-pointer rounded-lg border bg-card text-card-foreground shadow-sm hover:border-primary/50 transition-colors"
               onClick={() => navigate(action.path)}
             >
               <CardHeader className="pb-4">
@@ -61,7 +67,7 @@ export default function Transactions() {
                 </CardTitle>
                 <CardDescription>{action.description}</CardDescription>
               </CardHeader>
-            </Card>
+            </motion.div>
           ))}
         </div>
       </div>
