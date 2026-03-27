@@ -91,6 +91,7 @@ export default function Dashboard() {
   const { books, loading: booksLoading } = useBooks();
   const { activeMembers, loading: membersLoading } = useMembers();
   const { transactions, overdueTransactions, loading: transactionsLoading } = useTransactions();
+  const p = useBasePath();
 
   const loading = booksLoading || membersLoading || transactionsLoading;
 
