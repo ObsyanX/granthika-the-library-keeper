@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBasePath } from '@/hooks/useBasePath';
 import { CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function Transactions() {
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
+  const p = useBasePath();
 
   const actions = [
     {

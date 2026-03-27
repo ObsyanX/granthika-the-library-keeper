@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useMembers } from '@/hooks/useMembers';
+import { useBasePath } from '@/hooks/useBasePath';
 import { supabase } from '@/integrations/supabase/client';
 
 type Duration = '6months' | '1year' | '2years';
@@ -40,6 +41,7 @@ interface AuthUser {
 export default function AddMembership() {
   const navigate = useNavigate();
   const { addMember } = useMembers();
+  const p = useBasePath();
   
   const [authUsers, setAuthUsers] = useState<AuthUser[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
@@ -152,7 +154,7 @@ export default function AddMembership() {
       toast.success('Membership created successfully!', {
         description: `${fullName} has been registered with ID: ${membershipNo}${linkedMsg}`,
       });
-      navigate('/membership');
+      navigate(p('/membership'));
     } catch (error: any) {
       toast.error('Failed to create membership', { description: error.message });
     } finally {
@@ -163,7 +165,7 @@ export default function AddMembership() {
   return (
     <DashboardLayout>
       <div className="max-w-2xl mx-auto animate-fade-in">
-        <Button variant="ghost" onClick={() => navigate('/membership')} className="mb-6">
+        <Button variant="ghost" onClick={() => navigate(p('/membership'))} className="mb-6">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Memberships
         </Button>
@@ -314,7 +316,7 @@ export default function AddMembership() {
             </div>
 
             <div className="flex gap-4 pt-4">
-              <Button type="button" variant="outline" onClick={() => navigate('/membership')} className="flex-1 h-12 rounded-xl">
+              <Button type="button" variant="outline" onClick={() => navigate(p('/membership'))} className="flex-1 h-12 rounded-xl">
                 Cancel
               </Button>
               <Button type="submit" disabled={submitting} className="flex-1 h-12 rounded-xl gradient-primary text-primary-foreground">

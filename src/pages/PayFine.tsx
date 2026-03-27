@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useBooks } from '@/hooks/useBooks';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBasePath } from '@/hooks/useBasePath';
 import { useSettings } from '@/hooks/useSettings';
 import { supabase } from '@/integrations/supabase/client';
 import { Member } from '@/hooks/useMembers';
@@ -23,6 +24,7 @@ export default function PayFine() {
   const { transactions, updateTransaction } = useTransactions();
   const { updateBook, books } = useBooks();
   const { user, isAdmin } = useAuth();
+  const p = useBasePath();
   const { getDailyFineRate } = useSettings();
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -118,7 +120,7 @@ export default function PayFine() {
     return (
       <DashboardLayout>
         <div className="max-w-2xl mx-auto animate-fade-in">
-          <Button variant="ghost" onClick={() => navigate('/reports')} className="mb-6">
+          <Button variant="ghost" onClick={() => navigate(p('/reports'))} className="mb-6">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Reports
           </Button>
@@ -127,7 +129,7 @@ export default function PayFine() {
             <CreditCard className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
             <h2 className="font-display text-xl font-semibold text-foreground mb-2">No Membership Found</h2>
             <p className="text-muted-foreground mb-6">You need a membership to view and pay fines.</p>
-            <Button onClick={() => navigate('/reports')} className="gradient-primary text-primary-foreground rounded-xl">
+            <Button onClick={() => navigate(p('/reports'))} className="gradient-primary text-primary-foreground rounded-xl">
               Back to Reports
             </Button>
           </div>

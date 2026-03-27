@@ -13,6 +13,7 @@ import { useBooks } from '@/hooks/useBooks';
 import { useMembers, Member } from '@/hooks/useMembers';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBasePath } from '@/hooks/useBasePath';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function IssueBook() {
@@ -21,6 +22,7 @@ export default function IssueBook() {
   const { activeMembers, loading: membersLoading } = useMembers();
   const { createTransaction } = useTransactions();
   const { user, isAdmin } = useAuth();
+  const p = useBasePath();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBook, setSelectedBook] = useState<string | null>(null);
@@ -117,7 +119,7 @@ export default function IssueBook() {
       toast.success('Book issued successfully!', {
         description: `"${selectedBookData.title}" has been issued`,
       });
-      navigate('/transactions');
+      navigate(p('/transactions'));
     } catch (error: any) {
       toast.error('Failed to issue book', { description: error.message });
     } finally {
@@ -130,7 +132,7 @@ export default function IssueBook() {
     return (
       <DashboardLayout>
         <div className="max-w-2xl mx-auto animate-fade-in">
-          <Button variant="ghost" onClick={() => navigate('/user')} className="mb-6">
+          <Button variant="ghost" onClick={() => navigate(p('/'))} className="mb-6">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
           </Button>
@@ -140,7 +142,7 @@ export default function IssueBook() {
             <p className="text-muted-foreground mb-6">
               Your account is not linked to a library membership. Please contact the librarian to register.
             </p>
-            <Button onClick={() => navigate('/user')} className="gradient-primary text-primary-foreground rounded-xl">
+            <Button onClick={() => navigate(p('/'))} className="gradient-primary text-primary-foreground rounded-xl">
               Back to Home
             </Button>
           </div>
@@ -152,7 +154,7 @@ export default function IssueBook() {
   return (
     <DashboardLayout>
       <div className="max-w-4xl mx-auto animate-fade-in">
-        <Button variant="ghost" onClick={() => navigate('/transactions')} className="mb-6">
+        <Button variant="ghost" onClick={() => navigate(p('/transactions'))} className="mb-6">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Transactions
         </Button>
@@ -300,7 +302,7 @@ export default function IssueBook() {
               </div>
 
               <div className="flex gap-4 pt-4">
-                <Button type="button" variant="outline" onClick={() => navigate('/transactions')} className="flex-1 h-12 rounded-xl">
+                <Button type="button" variant="outline" onClick={() => navigate(p('/transactions'))} className="flex-1 h-12 rounded-xl">
                   Cancel
                 </Button>
                 <Button type="submit" disabled={submitting} className="flex-1 h-12 rounded-xl gradient-primary text-primary-foreground">

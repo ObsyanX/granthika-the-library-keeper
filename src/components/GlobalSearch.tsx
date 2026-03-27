@@ -15,6 +15,7 @@ import { useBooks } from '@/hooks/useBooks';
 import { useMembers } from '@/hooks/useMembers';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBasePath } from '@/hooks/useBasePath';
 import { format, parseISO } from 'date-fns';
 
 export function GlobalSearch() {
@@ -22,6 +23,7 @@ export function GlobalSearch() {
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
+  const p = useBasePath();
   
   const { books, loading: booksLoading } = useBooks();
   const { members, loading: membersLoading } = useMembers();
@@ -76,13 +78,13 @@ export function GlobalSearch() {
     
     switch (type) {
       case 'book':
-        navigate('/books');
+        navigate(p('/books'));
         break;
       case 'member':
-        navigate('/membership');
+        navigate(p('/membership'));
         break;
       case 'transaction':
-        navigate('/transactions');
+        navigate(p('/transactions'));
         break;
     }
   }, [navigate]);

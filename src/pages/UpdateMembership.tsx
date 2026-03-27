@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useMembers, Member } from '@/hooks/useMembers';
+import { useBasePath } from '@/hooks/useBasePath';
 
 type Duration = '6months' | '1year' | '2years';
 type Action = 'extend' | 'cancel';
@@ -27,6 +28,7 @@ function calculateNewEndDate(currentEndDate: string, duration: Duration): string
 export default function UpdateMembership() {
   const navigate = useNavigate();
   const { getMemberByMembershipNo, updateMember } = useMembers();
+  const p = useBasePath();
   
   const [membershipNo, setMembershipNo] = useState('');
   const [foundMember, setFoundMember] = useState<Member | null>(null);
@@ -91,7 +93,7 @@ export default function UpdateMembership() {
           description: `${foundMember.name}'s membership extended by ${durationLabel}`,
         });
       }
-      navigate('/membership');
+      navigate(p('/membership'));
     } catch (error: any) {
       toast.error('Failed to update membership', { description: error.message });
     } finally {
@@ -102,7 +104,7 @@ export default function UpdateMembership() {
   return (
     <DashboardLayout>
       <div className="max-w-2xl mx-auto animate-fade-in">
-        <Button variant="ghost" onClick={() => navigate('/membership')} className="mb-6">
+        <Button variant="ghost" onClick={() => navigate(p('/membership'))} className="mb-6">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Memberships
         </Button>
@@ -264,7 +266,7 @@ export default function UpdateMembership() {
               )}
 
               <div className="flex gap-4 pt-4">
-                <Button type="button" variant="outline" onClick={() => navigate('/membership')} className="flex-1 h-12 rounded-xl">
+                <Button type="button" variant="outline" onClick={() => navigate(p('/membership'))} className="flex-1 h-12 rounded-xl">
                   Cancel
                 </Button>
                 <Button 
