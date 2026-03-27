@@ -1,4 +1,4 @@
-import { BookOpen, Users, CreditCard, RefreshCw, FileText, TrendingUp, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react';
+import { BookOpen, Users, CreditCard, RefreshCw, FileText, TrendingUp, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
